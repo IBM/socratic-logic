@@ -26,6 +26,9 @@ class SimpleSentence(Sentence):
     def configure(self, m):
         self.formula.configure(m)
 
+        m.add_constraint(self.formula.val >= self.ranges[0].lower)
+        m.add_constraint(self.formula.val <= self.ranges[0].upper)
+
 
 class RealRange(object):
     pass
@@ -33,4 +36,5 @@ class RealRange(object):
 
 class ClosedRange(RealRange):
     def __init__(self, lower, upper):
-        pass
+        self.lower = lower
+        self.upper = upper
