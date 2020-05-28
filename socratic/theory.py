@@ -1,6 +1,14 @@
+import docplex.mp as mp
+import docplex.mp.model
+
+
 class Theory(object):
     def __init__(self, *args):
-        pass
+        self.sentences = args
+
+        self.m = mp.model.Model()
+        for s in self.sentences:
+            s.configure(self.m)
 
     def entails(self, query):
         pass
@@ -12,7 +20,11 @@ class Sentence(object):
 
 class SimpleSentence(Sentence):
     def __init__(self, formula, ranges):
-        pass
+        self.formula = formula
+        self.ranges = ranges
+
+    def configure(self, m):
+        self.formula.configure(m)
 
 
 class RealRange(object):
