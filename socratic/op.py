@@ -4,7 +4,7 @@ class Formula(object):
 
     def configure(self, m):
         if self.val is None:
-            self.val = m.continuous_var()
+            self.val = m.continuous_var(lb=0, ub=1)
 
 
 class Prop(Formula):

@@ -13,7 +13,7 @@ if __name__ == "__main__":
         SimpleSentence(Implies(Or(cat, dog), pet), [ClosedRange(.75, 1)])
     )
 
-    query = SimpleSentence(Implies(Not(pet), Not(tail)), [ClosedRange(.5, 1)])
+    query = SimpleSentence(Implies(And(whiskers, Not(pet)), Not(tail)), [ClosedRange(.5, 1)])
 
     import time
 
@@ -24,5 +24,9 @@ if __name__ == "__main__":
     t = time.time() - t
 
     print("res: ", res)
+    if theory.m.solution:
+        print("gap: ", theory.gap.solution_value)
+        for prop in [whiskers, tail, cat, dog, pet]:
+            print("%s:  %f" % (prop.name, prop.val.solution_value))
     print()
     print("time: ", t)

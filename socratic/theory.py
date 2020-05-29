@@ -7,7 +7,7 @@ class Theory(object):
         self.sentences = args
 
         self.m = mp.model.Model()
-        self.gap = self.m.continuous_var()
+        self.gap = self.m.continuous_var(lb=0, ub=1)
         for s in self.sentences:
             s.configure(self.m, self.gap)
 
