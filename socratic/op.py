@@ -6,6 +6,8 @@ class Formula(object):
         if self.val is None:
             self.val = m.continuous_var(lb=0, ub=1)
 
+            return True
+
 
 class Prop(Formula):
     def __init__(self, name):
@@ -21,10 +23,11 @@ class Operator(Formula):
         self.operands = args
 
     def configure(self, m):
-        super().configure(m)
+        if super().configure(m):
+            for operand in self.operands:
+                operand.configure(m)
 
-        for operand in self.operands:
-            operand.configure(m)
+            return True
 
 
 class And(Operator):
@@ -32,9 +35,8 @@ class And(Operator):
         super().__init__(*args)
 
     def configure(self, m):
-        super().configure(m)
-
-        m.add_constraint(self.val == m.max(0, m.sum(operand.val for operand in self.operands) - len(self.operands) + 1))
+        if super().configure(m):
+            m.add_constraint(self.val == m.max(0, m.sum_vars(operand.val for operand in self.operands) - len(self.operands) + 1))
 
 
 class Or(Operator):
@@ -42,9 +44,8 @@ class Or(Operator):
         super().__init__(*args)
 
     def configure(self, m):
-        super().configure(m)
-
-        m.add_constraint(self.val == m.min(1, m.sum(operand.val for operand in self.operands)))
+        if super().configure(m):
+            m.add_constraint(self.val == m.min(1, m.sum_vars(operand.val for operand in self.operands)))
 
 
 class Not(Operator):
@@ -54,9 +55,8 @@ class Not(Operator):
         self.arg = arg
 
     def configure(self, m):
-        super().configure(m)
-
-        m.add_constraint(self.val == 1 - self.arg.val)
+        if super().configure(m):
+            m.add_constraint(self.val == 1 - self.arg.val)
 
 
 class Implies(Operator):
@@ -67,6 +67,5 @@ class Implies(Operator):
         self.rhs = rhs
 
     def configure(self, m):
-        super().configure(m)
-
-        m.add_constraint(self.val == m.min(1, 1 - self.lhs.val + self.rhs.val))
+        if super().configure(m):
+            m.add_constraint(self.val == m.min(1, 1 - self.lhs.val + self.rhs.val))
