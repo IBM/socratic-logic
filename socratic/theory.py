@@ -12,7 +12,10 @@ class Theory(object):
             s.configure(self.m, self.gap)
 
     def entails(self, query):
-        pass
+        query.compliment(self.m, self.gap)
+
+        self.m.maximize(self.gap)
+        return not (self.m.solve() and self.gap.solution_value > 0)
 
 
 class Sentence(object):
@@ -33,6 +36,13 @@ class SimpleSentence(Sentence):
         for i in range(len(self.ranges)):
             self.ranges[i].configure(m, gap, self.formula, self.active_range[i])
 
+    def compliment(self, m, gap):
+        self.formula.configure(m)
+
+        self.active_range = m.binary_var_list(len(self.ranges))
+        for i in range(len(self.ranges)):
+            self.ranges[i].compliment(m, gap, self.formula, self.active_range[i])
+
 
 class RealRange(object):
     def __init__(self, lower, upper):
@@ -48,6 +58,10 @@ class ClosedRange(RealRange):
         m.add_indicator(active, formula.val >= self.lower)
         m.add_indicator(active, formula.val <= self.upper)
 
+    def compliment(self, m, gap, formula, active):
+        m.add_indicator(active, formula.val <= self.lower - gap)
+        m.add_indicator(active, formula.val >= self.upper + gap, 0)
+
 
 class OpenRange(RealRange):
     def __init__(self, lower, upper):
@@ -56,6 +70,10 @@ class OpenRange(RealRange):
     def configure(self, m, gap, formula, active):
         m.add_indicator(active, formula.val >= self.lower + gap)
         m.add_indicator(active, formula.val <= self.upper - gap)
+
+    def compliment(self, m, gap, formula, active):
+        m.add_indicator(active, formula.val <= self.lower)
+        m.add_indicator(active, formula.val >= self.upper, 0)
 
 
 class OpenLowerRange(RealRange):
@@ -66,6 +84,10 @@ class OpenLowerRange(RealRange):
         m.add_indicator(active, formula.val >= self.lower + gap)
         m.add_indicator(active, formula.val <= self.upper)
 
+    def compliment(self, m, gap, formula, active):
+        m.add_indicator(active, formula.val <= self.lower)
+        m.add_indicator(active, formula.val >= self.upper + gap, 0)
+
 
 class OpenUpperRange(RealRange):
     def __init__(self, lower, upper):
@@ -74,3 +96,7 @@ class OpenUpperRange(RealRange):
     def configure(self, m, gap, formula, active):
         m.add_indicator(active, formula.val >= self.lower)
         m.add_indicator(active, formula.val <= self.upper - gap)
+
+    def compliment(self, m, gap, formula, active):
+        m.add_indicator(active, formula.val <= self.lower - gap)
+        m.add_indicator(active, formula.val >= self.upper, 0)
