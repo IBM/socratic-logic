@@ -24,9 +24,9 @@ if __name__ == "__main__":
     t = time.time() - t
 
     print("res: ", res)
-    if theory.m.solution:
-        print("gap: ", theory.gap.solution_value)
-        for prop in [whiskers, tail, cat, dog, pet]:
-            print("%s:  %f" % (prop.name, prop.val.solution_value))
+    # if theory.m.solution:
+    #     print("gap: ", theory.gap.solution_value)
+    #     for prop in [whiskers, tail, cat, dog, pet]:
+    #         print("%s:  %f" % (prop.name, prop.val.solution_value))
     print()
     print("time: ", t)

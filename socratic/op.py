@@ -8,6 +8,12 @@ class Formula(object):
 
             return True
 
+    def reset(self):
+        if self.val is not None:
+            self.val = None
+
+            return True
+
 
 class Prop(Formula):
     def __init__(self, name):
@@ -28,6 +34,11 @@ class Operator(Formula):
                 operand.configure(m)
 
             return True
+
+    def reset(self):
+        if super().reset():
+            for operand in self.operands:
+                operand.reset()
 
 
 class And(Operator):

@@ -6,16 +6,23 @@ class Theory(object):
     def __init__(self, *args):
         self.sentences = args
 
-        self.m = mp.model.Model()
-        self.gap = self.m.continuous_var(lb=0, ub=1)
-        for s in self.sentences:
-            s.configure(self.m, self.gap)
-
     def entails(self, query):
-        query.compliment(self.m, self.gap)
+        m = mp.model.Model()
+        gap = m.continuous_var(lb=0, ub=1)
 
-        self.m.maximize(self.gap)
-        return not (self.m.solve() and self.gap.solution_value > 0)
+        for s in self.sentences:
+            s.configure(m, gap)
+        query.compliment(m, gap)
+
+        m.maximize(gap)
+        res = not (m.solve() and gap.solution_value > 0)
+        m.end()
+
+        for s in self.sentences:
+            s.reset()
+        query.reset()
+
+        return res
 
 
 class Sentence(object):
@@ -42,6 +49,11 @@ class SimpleSentence(Sentence):
         self.active_range = m.binary_var_list(len(self.ranges))
         for i in range(len(self.ranges)):
             self.ranges[i].compliment(m, gap, self.formula, self.active_range[i])
+
+    def reset(self):
+        self.formula.reset()
+
+        self.active_range = None
 
 
 class RealRange(object):
