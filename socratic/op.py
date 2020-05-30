@@ -1,8 +1,16 @@
+from enum import Enum
+
+
+class Logic(Enum):
+    GODEL = 0
+    LUKASIEWICZ = 1
+
+
 class Formula(object):
     def __init__(self):
         self.val = None
 
-    def configure(self, m):
+    def configure(self, m, gap, logic):
         if self.val is None:
             self.val = m.continuous_var(lb=0, ub=1)
 
@@ -28,14 +36,14 @@ class Operator(Formula):
 
         self.operands = args
 
-    def configure(self, m):
-        if super().configure(m):
+    def configure(self, m, gap, logic):
+        if super().configure(m, gap, logic):
             for operand in self.operands:
-                operand.configure(m)
+                operand.configure(m, gap, logic)
 
-            self.add_constraint(m)
+            self.add_constraint(m, gap, logic)
 
-    def add_constraint(self, m):
+    def add_constraint(self, m, gap, logic):
         pass
 
     def reset(self):
@@ -45,13 +53,21 @@ class Operator(Formula):
 
 
 class And(Operator):
-    def add_constraint(self, m):
-        m.add_constraint(self.val == m.max(0, m.sum_vars(operand.val for operand in self.operands) - len(self.operands) + 1))
+    def add_constraint(self, m, gap, logic):
+        if logic is Logic.GODEL:
+            m.add_constraint(self.val == m.min(operand.val for operand in self.operands))
+
+        else:  # logic is Logic.LUKASIEWICZ
+            m.add_constraint(self.val == m.max(0, m.sum_vars(operand.val for operand in self.operands) - len(self.operands) + 1))
 
 
 class Or(Operator):
-    def add_constraint(self, m):
-        m.add_constraint(self.val == m.min(1, m.sum_vars(operand.val for operand in self.operands)))
+    def add_constraint(self, m, gap, logic):
+        if logic is Logic.GODEL:
+            m.add_constraint(self.val == m.max(operand.val for operand in self.operands))
+
+        else:  # logic is Logic.LUKASIEWICZ
+            m.add_constraint(self.val == m.min(1, m.sum_vars(operand.val for operand in self.operands)))
 
 
 class Not(Operator):
@@ -60,7 +76,7 @@ class Not(Operator):
 
         self.arg = arg
 
-    def add_constraint(self, m):
+    def add_constraint(self, m, gap, logic):
         m.add_constraint(self.val == 1 - self.arg.val)
 
 
@@ -71,5 +87,15 @@ class Implies(Operator):
         self.lhs = lhs
         self.rhs = rhs
 
-    def add_constraint(self, m):
-        m.add_constraint(self.val == m.min(1, 1 - self.lhs.val + self.rhs.val))
+    def add_constraint(self, m, gap, logic):
+        if logic is Logic.GODEL:
+            lhs_le_rhs = m.binary_var()
+
+            m.add_indicator(lhs_le_rhs, self.lhs.val <= self.rhs.val)
+            m.add_indicator(lhs_le_rhs, self.val == 1)
+
+            m.add_indicator(lhs_le_rhs, self.lhs.val >= self.rhs.val + gap, 0)
+            m.add_indicator(lhs_le_rhs, self.val == self.rhs.val, 0)
+
+        else:  # logic is Logic.LUKASIEWICZ
+            m.add_constraint(self.val == m.min(1, 1 - self.lhs.val + self.rhs.val))

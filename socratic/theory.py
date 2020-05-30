@@ -1,18 +1,20 @@
 import docplex.mp as mp
 import docplex.mp.model
 
+from socratic.op import Logic
+
 
 class Theory(object):
     def __init__(self, *args):
         self.sentences = args
 
-    def entails(self, query):
+    def entails(self, query, logic=Logic.LUKASIEWICZ):
         m = mp.model.Model()
         gap = m.continuous_var(lb=0, ub=1)
 
         for s in self.sentences:
-            s.configure(m, gap)
-        query.compliment(m, gap)
+            s.configure(m, gap, logic)
+        query.compliment(m, gap, logic)
 
         m.maximize(gap)
         res = not (m.solve() and gap.solution_value > 0)
@@ -34,16 +36,16 @@ class SimpleSentence(Sentence):
         self.formula = formula
         self.ranges = ranges
 
-    def configure(self, m, gap):
-        self.formula.configure(m)
+    def configure(self, m, gap, logic):
+        self.formula.configure(m, gap, logic)
 
         active_range = m.binary_var_list(len(self.ranges))
         m.add_constraint(m.sum(active_range) == 1)
         for i in range(len(self.ranges)):
             self.ranges[i].configure(m, gap, self.formula, active_range[i])
 
-    def compliment(self, m, gap):
-        self.formula.configure(m)
+    def compliment(self, m, gap, logic):
+        self.formula.configure(m, gap, logic)
 
         active_range = m.binary_var_list(len(self.ranges))
         for i in range(len(self.ranges)):
