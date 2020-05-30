@@ -30,6 +30,19 @@ class Prop(Formula):
         self.name = name
 
 
+class Constant(Formula):
+    def __init__(self, val):
+        super().__init__()
+
+        self.val = val
+
+    def configure(self, m, gap, logic):
+        pass
+
+    def reset(self):
+        pass
+
+
 class Operator(Formula):
     def __init__(self, *args):
         super().__init__()
@@ -58,7 +71,7 @@ class And(Operator):
             m.add_constraint(self.val == m.min(operand.val for operand in self.operands))
 
         else:  # logic is Logic.LUKASIEWICZ
-            m.add_constraint(self.val == m.max(0, m.sum_vars(operand.val for operand in self.operands) - len(self.operands) + 1))
+            m.add_constraint(self.val == m.max(0, m.sum(operand.val for operand in self.operands) - len(self.operands) + 1))
 
 
 class GodelAnd(And):
@@ -77,7 +90,7 @@ class Or(Operator):
             m.add_constraint(self.val == m.max(operand.val for operand in self.operands))
 
         else:  # logic is Logic.LUKASIEWICZ
-            m.add_constraint(self.val == m.min(1, m.sum_vars(operand.val for operand in self.operands)))
+            m.add_constraint(self.val == m.min(1, m.sum(operand.val for operand in self.operands)))
 
 
 class GodelOr(Or):

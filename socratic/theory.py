@@ -77,6 +77,11 @@ class ClosedRange(RealRange):
         m.add_indicator(active, formula.val >= self.upper + gap, 0)
 
 
+class Point(ClosedRange):
+    def __init__(self, point):
+        super().__init__(point, point)
+
+
 class OpenRange(RealRange):
     def configure(self, m, gap, formula, active):
         m.add_indicator(active, formula.val >= self.lower + gap)
