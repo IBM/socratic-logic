@@ -33,7 +33,10 @@ class Operator(Formula):
             for operand in self.operands:
                 operand.configure(m)
 
-            return True
+            self.add_constraint(m)
+
+    def add_constraint(self, m):
+        pass
 
     def reset(self):
         if super().reset():
@@ -42,21 +45,13 @@ class Operator(Formula):
 
 
 class And(Operator):
-    def __init__(self, *args):
-        super().__init__(*args)
-
-    def configure(self, m):
-        if super().configure(m):
-            m.add_constraint(self.val == m.max(0, m.sum_vars(operand.val for operand in self.operands) - len(self.operands) + 1))
+    def add_constraint(self, m):
+        m.add_constraint(self.val == m.max(0, m.sum_vars(operand.val for operand in self.operands) - len(self.operands) + 1))
 
 
 class Or(Operator):
-    def __init__(self, *args):
-        super().__init__(*args)
-
-    def configure(self, m):
-        if super().configure(m):
-            m.add_constraint(self.val == m.min(1, m.sum_vars(operand.val for operand in self.operands)))
+    def add_constraint(self, m):
+        m.add_constraint(self.val == m.min(1, m.sum_vars(operand.val for operand in self.operands)))
 
 
 class Not(Operator):
@@ -65,9 +60,8 @@ class Not(Operator):
 
         self.arg = arg
 
-    def configure(self, m):
-        if super().configure(m):
-            m.add_constraint(self.val == 1 - self.arg.val)
+    def add_constraint(self, m):
+        m.add_constraint(self.val == 1 - self.arg.val)
 
 
 class Implies(Operator):
@@ -77,6 +71,5 @@ class Implies(Operator):
         self.lhs = lhs
         self.rhs = rhs
 
-    def configure(self, m):
-        if super().configure(m):
-            m.add_constraint(self.val == m.min(1, 1 - self.lhs.val + self.rhs.val))
+    def add_constraint(self, m):
+        m.add_constraint(self.val == m.min(1, 1 - self.lhs.val + self.rhs.val))
