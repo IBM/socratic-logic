@@ -61,6 +61,16 @@ class And(Operator):
             m.add_constraint(self.val == m.max(0, m.sum_vars(operand.val for operand in self.operands) - len(self.operands) + 1))
 
 
+class GodelAnd(And):
+    def add_constraint(self, m, gap, logic):
+        super().add_constraint(m, gap, Logic.GODEL)
+
+
+class LukasiewiczAnd(And):
+    def add_constraint(self, m, gap, logic):
+        super().add_constraint(m, gap, Logic.LUKASIEWICZ)
+
+
 class Or(Operator):
     def add_constraint(self, m, gap, logic):
         if logic is Logic.GODEL:
@@ -68,6 +78,16 @@ class Or(Operator):
 
         else:  # logic is Logic.LUKASIEWICZ
             m.add_constraint(self.val == m.min(1, m.sum_vars(operand.val for operand in self.operands)))
+
+
+class GodelOr(Or):
+    def add_constraint(self, m, gap, logic):
+        super().add_constraint(m, gap, Logic.GODEL)
+
+
+class LukasiewiczOr(Or):
+    def add_constraint(self, m, gap, logic):
+        super().add_constraint(m, gap, Logic.LUKASIEWICZ)
 
 
 class Not(Operator):
@@ -99,3 +119,13 @@ class Implies(Operator):
 
         else:  # logic is Logic.LUKASIEWICZ
             m.add_constraint(self.val == m.min(1, 1 - self.lhs.val + self.rhs.val))
+
+
+class GodelImplies(Implies):
+    def add_constraint(self, m, gap, logic):
+        super().add_constraint(m, gap, Logic.GODEL)
+
+
+class LukasiewiczImplies(Implies):
+    def add_constraint(self, m, gap, logic):
+        super().add_constraint(m, gap, Logic.LUKASIEWICZ)
