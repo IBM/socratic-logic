@@ -1,3 +1,6 @@
+from collections.abc import Iterable
+from numbers import Number
+
 import docplex.mp as mp
 import docplex.mp.model
 
@@ -33,8 +36,11 @@ class Sentence(object):
 
 class SimpleSentence(Sentence):
     def __init__(self, formula, ranges):
+        if not isinstance(ranges, Iterable):
+            ranges = [ranges]
+
         self.formula = formula
-        self.ranges = ranges
+        self.ranges = [Point(r) if isinstance(r, Number) else r for r in ranges]
 
     def configure(self, m, gap, logic):
         self.formula.configure(m, gap, logic)

@@ -1,4 +1,5 @@
 from enum import Enum
+from numbers import Number
 
 
 class Logic(Enum):
@@ -47,7 +48,7 @@ class Operator(Formula):
     def __init__(self, *args):
         super().__init__()
 
-        self.operands = args
+        self.operands = [Constant(arg) if isinstance(arg, Number) else arg for arg in args]
 
     def configure(self, m, gap, logic):
         if super().configure(m, gap, logic):
@@ -107,7 +108,7 @@ class Not(Operator):
     def __init__(self, arg):
         super().__init__(arg)
 
-        self.arg = arg
+        self.arg = self.operands[0]
 
     def add_constraint(self, m, gap, logic):
         m.add_constraint(self.val == 1 - self.arg.val)
@@ -117,8 +118,8 @@ class Implies(Operator):
     def __init__(self, lhs, rhs):
         super().__init__(lhs, rhs)
 
-        self.lhs = lhs
-        self.rhs = rhs
+        self.lhs = self.operands[0]
+        self.rhs = self.operands[1]
 
     def add_constraint(self, m, gap, logic):
         if logic is Logic.GODEL:
