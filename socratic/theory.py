@@ -9,6 +9,9 @@ from socratic.op import Logic
 
 class Theory(object):
     def __init__(self, *args):
+        if len(args) == 1 and isinstance(args[0], Iterable):
+            args = args[0]
+
         self.sentences = args
 
     def entails(self, query, logic=Logic.LUKASIEWICZ):

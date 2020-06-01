@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from enum import Enum
 from numbers import Number
 
@@ -47,6 +48,9 @@ class Constant(Formula):
 class Operator(Formula):
     def __init__(self, *args):
         super().__init__()
+
+        if len(args) == 1 and isinstance(args[0], Iterable):
+            args = args[0]
 
         self.operands = [Constant(arg) if isinstance(arg, Number) else arg for arg in args]
 
