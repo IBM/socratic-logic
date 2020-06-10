@@ -138,3 +138,27 @@ class Not(Implies):
 class Inv(Not):
     def __init__(self, arg):
         super().__init__(arg, logic=Logic.LUKASIEWICZ)
+
+
+class Equiv(Operator):
+    def __init__(self, lhs, rhs, logic=None):
+        super().__init__(lhs, rhs, logic=logic)
+
+        self.lhs = self.operands[0]
+        self.rhs = self.operands[1]
+
+    def add_constraint(self, m, gap, logic):
+        if self.logic is not None:
+            logic = self.logic
+
+        if logic is Logic.GODEL:
+            lhs_eq_rhs = m.binary_var()
+
+            m.add_indicator(lhs_eq_rhs, self.lhs.val == self.rhs.val)
+            m.add_indicator(lhs_eq_rhs, self.val == 1)
+
+            m.add_indicator(lhs_eq_rhs, m.abs(self.lhs.val - self.rhs.val) >= gap, 0)
+            m.add_indicator(lhs_eq_rhs, self.val == m.min(self.lhs.val, self.rhs.val), 0)
+
+        else:  # logic is Logic.LUKASIEWICZ
+            m.add_constraint(self.val == 1 - m.abs(self.lhs.val - self.rhs.val))
