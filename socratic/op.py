@@ -31,12 +31,18 @@ class Prop(Formula):
 
         self.name = name
 
+    def __str__(self):
+        return str(self.name)
+
 
 class Constant(Formula):
     def __init__(self, val):
         super().__init__()
 
         self.val = val
+
+    def __str__(self):
+        return str(self.val)
 
     def configure(self, m, gap, logic):
         pass
@@ -55,6 +61,10 @@ class Operator(Formula):
             args = args[0]
 
         self.operands = [Constant(arg) if isinstance(arg, Number) else arg for arg in args]
+
+    def __str__(self):
+        logic_arg = ["logic=%s" % str(self.logic)] if self.logic is not None else []
+        return "%s(%s)" % (type(self).__name__, ", ".join(map(str, self.operands + logic_arg)))
 
     def configure(self, m, gap, logic):
         if super().configure(m, gap, logic):
