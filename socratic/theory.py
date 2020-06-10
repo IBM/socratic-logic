@@ -19,7 +19,7 @@ class Theory(object):
 
     def entails(self, query, logic=Logic.LUKASIEWICZ):
         m = mp.model.Model()
-        gap = m.continuous_var(lb=0, ub=1)
+        gap = m.continuous_var(lb=0, ub=1, name="gap")
 
         for s in self.sentences:
             s.configure(m, gap, logic)
@@ -53,7 +53,7 @@ class SimpleSentence(Sentence):
     def configure(self, m, gap, logic):
         self.formula.configure(m, gap, logic)
 
-        active_range = m.binary_var_list(len(self.ranges))
+        active_range = m.binary_var_list(len(self.ranges), name=str(self.formula) + ".active_range")
         m.add_constraint(m.sum(active_range) == 1)
         for i in range(len(self.ranges)):
             self.ranges[i].configure(m, gap, self.formula, active_range[i])
@@ -61,7 +61,7 @@ class SimpleSentence(Sentence):
     def compliment(self, m, gap, logic):
         self.formula.configure(m, gap, logic)
 
-        active_range = m.binary_var_list(len(self.ranges))
+        active_range = m.binary_var_list(len(self.ranges), name=str(self.formula) + ".active_range")
         for i in range(len(self.ranges)):
             self.ranges[i].compliment(m, gap, self.formula, active_range[i])
 

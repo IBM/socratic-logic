@@ -14,7 +14,7 @@ class Formula(object):
 
     def configure(self, m, gap, logic):
         if self.val is None:
-            self.val = m.continuous_var(lb=0, ub=1)
+            self.val = m.continuous_var(lb=0, ub=1, name=str(self))
 
             return True
 
@@ -128,7 +128,7 @@ class Implies(Operator):
             logic = self.logic
 
         if logic is Logic.GODEL:
-            lhs_le_rhs = m.binary_var()
+            lhs_le_rhs = m.binary_var(name=str(self) + ".lhs_le_rhs")
 
             m.add_indicator(lhs_le_rhs, self.lhs.val <= self.rhs.val)
             m.add_indicator(lhs_le_rhs, self.val == 1)
@@ -165,7 +165,7 @@ class Equiv(Operator):
             logic = self.logic
 
         if logic is Logic.GODEL:
-            lhs_eq_rhs = m.binary_var()
+            lhs_eq_rhs = m.binary_var(name=str(self) + ".lhs_eq_rhs")
 
             m.add_indicator(lhs_eq_rhs, self.lhs.val == self.rhs.val)
             m.add_indicator(lhs_eq_rhs, self.val == 1)
@@ -184,7 +184,7 @@ class Delta(Operator):
         self.arg = self.operands[0]
 
     def add_constraint(self, m, gap, logic):
-        arg_eq_one = m.binary_var()
+        arg_eq_one = m.binary_var(name=str(self) + ".arg_eq_one")
 
         m.add_indicator(arg_eq_one, self.arg.val == 1)
         m.add_indicator(arg_eq_one, self.val == 1)
