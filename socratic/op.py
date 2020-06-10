@@ -147,6 +147,12 @@ class Not(Implies):
     def __init__(self, arg, logic=None):
         super().__init__(arg, 0, logic=logic)
 
+        self.arg = self.operands[0]
+
+    def __str__(self):
+        logic_arg = ["logic=%s" % str(self.logic)] if self.logic is not None else []
+        return "%s(%s)" % (type(self).__name__, ", ".join([str(self.arg)] + logic_arg))
+
 
 class Inv(Not):
     def __init__(self, arg):
