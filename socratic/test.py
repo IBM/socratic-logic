@@ -38,7 +38,14 @@ class HajekTestCase(unittest.TestCase):
         for logic in Logic:
             for formula in formulae:
                 with self.subTest(formula=str(formula), logic=str(logic)):
-                    self.assertTrue(empty_theory.entails(SimpleSentence(formula, 1), logic=logic))
+                    try:
+                        self.assertTrue(empty_theory.entails(SimpleSentence(formula, 1), logic=logic))
+                    except AssertionError:
+                        print()
+                        print(str(formula), str(logic))
+                        empty_theory.m.print_solution(print_zeros=True)
+                        print()
+                        raise
 
     def test_hajek_axioms(self):
         from socratic.hajek import axioms
