@@ -22,6 +22,7 @@ class Theory(object):
 
     def entails(self, query, logic=Logic.LUKASIEWICZ):
         self.m = mp.model.Model()
+        self.m.float_precision = 16
         self.gap = self.m.continuous_var(lb=0, ub=1, name="gap")
 
         for s in self.sentences:
@@ -35,7 +36,7 @@ class Theory(object):
             query.compliment(self.m, self.gap, logic)
 
         self.m.maximize(self.gap)
-        res = not (self.m.solve() and self.gap.solution_value > 0)
+        res = not (self.m.solve() and self.gap.solution_value > 1e-8)
 
         return res
 
