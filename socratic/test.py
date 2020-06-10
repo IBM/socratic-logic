@@ -1,3 +1,4 @@
+import itertools
 import unittest
 
 from socratic.clock import *
@@ -6,21 +7,10 @@ from socratic.theory import *
 
 
 class SatTestCase(unittest.TestCase):
-    def test_sat(self):
-        x = Prop("x")
-        y = Prop("y")
-        z = Prop("z")
+    def sat_test(self, k):
+        x = [Prop(k) for k in range(k)]
 
-        s = [
-            SimpleSentence(Or(x, y, z), 1),
-            SimpleSentence(Or(x, y, Not(z)), 1),
-            SimpleSentence(Or(x, Not(y), z), 1),
-            SimpleSentence(Or(Not(x), y, z), 1),
-            SimpleSentence(Or(x, Not(y), Not(z)), 1),
-            SimpleSentence(Or(Not(x), y, Not(z)), 1),
-            SimpleSentence(Or(Not(x), Not(y), z), 1),
-            SimpleSentence(Or(Not(x), Not(y), Not(z)), 1)
-        ]
+        s = [SimpleSentence(Or(c), 1) for c in itertools.product(*([a, Not(a)] for a in x))]
 
         theories = [Theory(s[:i] + s[i+1:]) for i in range(len(s))]
 
@@ -33,6 +23,12 @@ class SatTestCase(unittest.TestCase):
 
         # The problem is likewise satisfiable in Lukasiewicz logic
         self.assertTrue(clock(Theory(s).satisfiable, logic=Logic.LUKASIEWICZ))
+
+    def test_sat(self):
+        for i in [3, 4, 5, 6]:
+            with self.subTest(i=i):
+                clock(self.sat_test, i)
+                print()
 
 
 if __name__ == '__main__':
