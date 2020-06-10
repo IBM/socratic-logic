@@ -32,10 +32,10 @@ class SatTestCase(unittest.TestCase):
 
 
 class HajekTestCase(unittest.TestCase):
-    def hajek_test(self, formulae):
+    def hajek_test(self, formulae, logics=Logic):
         empty_theory = Theory()
 
-        for logic in Logic:
+        for logic in logics:
             for formula in formulae:
                 with self.subTest(formula=str(formula), logic=str(logic)):
                     try:
@@ -46,6 +46,14 @@ class HajekTestCase(unittest.TestCase):
                         empty_theory.m.print_solution(print_zeros=True)
                         print()
                         raise
+
+    def hajek_test_false(self, formulae, logics=Logic):
+        empty_theory = Theory()
+
+        for logic in logics:
+            for formula in formulae:
+                with self.subTest(formula=str(formula), logic=str(logic)):
+                    self.assertFalse(empty_theory.entails(SimpleSentence(formula, 1), logic=logic))
 
     def test_hajek_axioms(self):
         from socratic.hajek import axioms
@@ -86,6 +94,16 @@ class HajekTestCase(unittest.TestCase):
     def test_hajek_delta_operator(self):
         from socratic.hajek import delta_operator
         clock(self.hajek_test, delta_operator)
+
+    def test_hajek_lukasiewicz(self):
+        from socratic.hajek import lukasiewicz
+        clock(self.hajek_test, lukasiewicz, logics=[Logic.LUKASIEWICZ])
+        clock(self.hajek_test_false, lukasiewicz, logics=[Logic.GODEL])
+
+    def test_hajek_godel(self):
+        from socratic.hajek import godel
+        clock(self.hajek_test, godel, logics=[Logic.GODEL])
+        clock(self.hajek_test_false, godel, logics=[Logic.LUKASIEWICZ])
 
 
 if __name__ == '__main__':
