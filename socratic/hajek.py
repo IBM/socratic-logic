@@ -129,15 +129,3 @@ godel = [
     Implies(Implies(phi, Implies(psi, chi)), Implies(Implies(phi, psi), Implies(phi, chi))),
     Implies(Implies(phi, Not(phi)), Not(phi)),
 ]
-
-boolean = [
-    Implies(phi, Implies(psi, phi)),
-    Implies(Not(Not(phi)), phi),
-    Implies(Implies(phi, Implies(psi, chi)), Implies(Implies(phi, psi), Implies(phi, chi))),
-    Implies(Implies(Not(phi), Not(psi)), Implies(psi, phi)),
-    Implies(Implies(phi, psi), Implies(Implies(phi, Not(psi)), Not(phi))),
-    Implies(Not(phi), Implies(phi, psi)),
-    Implies(phi, Implies(Not(psi), Not(Implies(phi, psi)))),
-    Implies(Implies(phi, psi), Implies(Implies(Not(phi), psi), psi)),
-    Implies(Implies(Implies(phi, psi), psi), Implies(Implies(psi, phi), phi)),
-]
