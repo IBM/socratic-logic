@@ -14,26 +14,28 @@ class Theory(object):
 
         self.sentences = args
 
+        self.m = None
+        self.gap = None
+
     def satisfiable(self, logic=Logic.LUKASIEWICZ):
         return not self.entails(None, logic)
 
     def entails(self, query, logic=Logic.LUKASIEWICZ):
-        m = mp.model.Model()
-        gap = m.continuous_var(lb=0, ub=1, name="gap")
-
-        for s in self.sentences:
-            s.configure(m, gap, logic)
-        if query is not None:
-            query.compliment(m, gap, logic)
-
-        m.maximize(gap)
-        res = not (m.solve() and gap.solution_value > 0)
-        m.end()
+        self.m = mp.model.Model()
+        self.gap = self.m.continuous_var(lb=0, ub=1, name="gap")
 
         for s in self.sentences:
             s.reset()
         if query is not None:
             query.reset()
+
+        for s in self.sentences:
+            s.configure(self.m, self.gap, logic)
+        if query is not None:
+            query.compliment(self.m, self.gap, logic)
+
+        self.m.maximize(self.gap)
+        res = not (self.m.solve() and self.gap.solution_value > 0)
 
         return res
 

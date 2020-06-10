@@ -10,7 +10,7 @@ class Logic(Enum):
 
 class Formula(object):
     def __init__(self):
-        self.val = None
+        self.val = "unconfigured"
 
     def configure(self, m, gap, logic):
         if self.val is None:
