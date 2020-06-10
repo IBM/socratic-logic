@@ -81,7 +81,7 @@ class And(Operator):
             m.add_constraint(self.val == m.min(operand.val for operand in self.operands))
 
         else:  # logic is Logic.LUKASIEWICZ
-            m.add_constraint(self.val == m.max(0, m.sum(operand.val for operand in self.operands) - len(self.operands) + 1))
+            m.add_constraint(self.val == m.max(0, 1 - m.sum(1 - operand.val for operand in self.operands)))
 
 
 class WeakAnd(And):
@@ -127,7 +127,10 @@ class Implies(Operator):
             m.add_indicator(lhs_le_rhs, self.val == self.rhs.val, 0)
 
         else:  # logic is Logic.LUKASIEWICZ
-            m.add_constraint(self.val == m.min(1, 1 - self.lhs.val + self.rhs.val))
+            if isinstance(self.rhs.val, Number) and self.rhs.val == 0:
+                m.add_constraint(self.val == 1 - self.lhs.val)
+            else:
+                m.add_constraint(self.val == m.min(1, 1 - self.lhs.val + self.rhs.val))
 
 
 class Not(Implies):
