@@ -106,16 +106,6 @@ class WeakOr(Or):
         super().__init__(*args, logic=Logic.GODEL)
 
 
-class Not(Operator):
-    def __init__(self, arg):
-        super().__init__(arg)
-
-        self.arg = self.operands[0]
-
-    def add_constraint(self, m, gap, logic):
-        m.add_constraint(self.val == 1 - self.arg.val)
-
-
 class Implies(Operator):
     def __init__(self, lhs, rhs, logic=None):
         super().__init__(lhs, rhs, logic=logic)
@@ -138,3 +128,13 @@ class Implies(Operator):
 
         else:  # logic is Logic.LUKASIEWICZ
             m.add_constraint(self.val == m.min(1, 1 - self.lhs.val + self.rhs.val))
+
+
+class Not(Implies):
+    def __init__(self, arg, logic=None):
+        super().__init__(arg, 0, logic=logic)
+
+
+class Inv(Not):
+    def __init__(self, arg):
+        super().__init__(arg, logic=Logic.LUKASIEWICZ)
