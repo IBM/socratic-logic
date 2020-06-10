@@ -165,3 +165,19 @@ class Equiv(Operator):
 
         else:  # logic is Logic.LUKASIEWICZ
             m.add_constraint(self.val == 1 - m.abs(self.lhs.val - self.rhs.val))
+
+
+class Delta(Operator):
+    def __init__(self, arg):
+        super().__init__(arg)
+
+        self.arg = self.operands[0]
+
+    def add_constraint(self, m, gap, logic):
+        arg_eq_one = m.binary_var()
+
+        m.add_indicator(arg_eq_one, self.arg.val == 1)
+        m.add_indicator(arg_eq_one, self.val == 1)
+
+        m.add_indicator(arg_eq_one, self.arg.val <= 1 - gap, 0)
+        m.add_indicator(arg_eq_one, self.val == 0, 0)
