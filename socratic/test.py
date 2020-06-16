@@ -129,24 +129,30 @@ class HajekTestCase(unittest.TestCase):
 
 
 class BooleanTestCase(unittest.TestCase):
-    def test_boolean(self):
+    def boolean_test(self, logic):
         phi = Prop("phi")
         psi = Prop("psi")
 
-        s = SimpleSentence(Implies(Implies(phi, psi), Implies(Implies(Not(phi), psi), psi)), 1)
+        formula = Implies(Implies(phi, psi), Implies(Implies(Not(phi), psi), psi))
+
+        s = SimpleSentence(formula, 1)
 
         empty_theory = Theory()
 
-        self.assertFalse(empty_theory.entails(s, logic=Logic.GODEL))
-        self.assertFalse(empty_theory.entails(s, logic=Logic.LUKASIEWICZ))
+        self.assertFalse(empty_theory.entails(s, logic=logic))
 
         boolean_theory = Theory(
             SimpleSentence(phi, [0, 1]),
-            SimpleSentence(psi, [0, 1])
+            SimpleSentence(psi, [0, 1]),
         )
 
-        self.assertTrue(boolean_theory.entails(s, logic=Logic.GODEL))
-        self.assertTrue(boolean_theory.entails(s, logic=Logic.LUKASIEWICZ))
+        self.assertTrue(boolean_theory.entails(s, logic=logic))
+
+    def test_boolean_godel(self):
+        clock(self.boolean_test, Logic.GODEL)
+
+    def test_boolean_lukasiewicz(self):
+        clock(self.boolean_test, Logic.LUKASIEWICZ)
 
 
 if __name__ == '__main__':
