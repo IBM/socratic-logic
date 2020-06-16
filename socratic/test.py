@@ -8,26 +8,48 @@ from socratic.theory import *
 
 class SatTestCase(unittest.TestCase):
     def sat_test(self, k):
-        x = [Prop(k) for k in range(k)]
+        x = [Prop("x_%d" % k) for k in range(k)]
 
-        s = [SimpleSentence(Or(c), 1) for c in itertools.product(*([a, Not(a)] for a in x))]
+        s = [SimpleSentence(Or(c), 1) for c in itertools.product(*([a, Inv(a)] for a in x))]
 
+        full_theory = Theory(s)
         theories = [Theory(s[:i] + s[i+1:]) for i in range(len(s))]
 
         # The problem is unsatisfiable in Godel (and classical) logic
-        self.assertFalse(clock(Theory(s).satisfiable, logic=Logic.GODEL))
+        try:
+            self.assertFalse(clock(full_theory.satisfiable, logic=Logic.GODEL))
+        except AssertionError:
+            print()
+            print("k=%d" % k)
+            full_theory.m.print_solution(print_zeros=True)
+            print()
+            raise
 
         # Removing any one sentence renders it satisfiable
         for theory in theories:
             self.assertTrue(theory.satisfiable(logic=Logic.GODEL))
 
         # The problem is likewise satisfiable in Lukasiewicz logic
-        self.assertTrue(clock(Theory(s).satisfiable, logic=Logic.LUKASIEWICZ))
+        self.assertTrue(clock(full_theory.satisfiable, logic=Logic.LUKASIEWICZ))
+
+        exclusions = [SimpleSentence(a, [OpenUpperInterval(0, 1/k), OpenLowerInterval((k-1)/k, 1)]) for a in x]
+
+        excluded_theory = Theory(s + exclusions)
+
+        # The problem becomes unsatisfiable again if propositions are forced to lie near 0 and 1
+        try:
+            self.assertFalse(clock(excluded_theory.satisfiable, logic=Logic.LUKASIEWICZ))
+        except AssertionError:
+            print()
+            print("k=%d" % k)
+            excluded_theory.m.print_solution(print_zeros=True)
+            print()
+            raise
 
     def test_sat(self):
-        for i in [3, 4, 5, 6]:
-            with self.subTest(i=i):
-                clock(self.sat_test, i)
+        for k in range(3, 7):
+            with self.subTest(k=k):
+                clock(self.sat_test, k)
                 print()
 
 
