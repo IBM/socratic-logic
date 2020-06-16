@@ -46,33 +46,33 @@ class Sentence(object):
 
 
 class SimpleSentence(Sentence):
-    def __init__(self, formula, ranges):
-        if not isinstance(ranges, Iterable):
-            ranges = [ranges]
+    def __init__(self, formula, intervals):
+        if not isinstance(intervals, Iterable):
+            intervals = [intervals]
 
         self.formula = formula
-        self.ranges = [Point(r) if isinstance(r, Number) else r for r in ranges]
+        self.intervals = [Point(r) if isinstance(r, Number) else r for r in intervals]
 
     def configure(self, m, gap, logic):
         self.formula.configure(m, gap, logic)
 
-        active_range = m.binary_var_list(len(self.ranges), name=str(self.formula) + ".active_range")
-        m.add_constraint(m.sum(active_range) == 1)
-        for i in range(len(self.ranges)):
-            self.ranges[i].configure(m, gap, self.formula, active_range[i])
+        active_interval = m.binary_var_list(len(self.intervals), name=str(self.formula) + ".active_interval")
+        m.add_constraint(m.sum(active_interval) == 1)
+        for i in range(len(self.intervals)):
+            self.intervals[i].configure(m, gap, self.formula, active_interval[i])
 
     def compliment(self, m, gap, logic):
         self.formula.configure(m, gap, logic)
 
-        active_range = m.binary_var_list(len(self.ranges), name=str(self.formula) + ".active_range")
-        for i in range(len(self.ranges)):
-            self.ranges[i].compliment(m, gap, self.formula, active_range[i])
+        active_interval = m.binary_var_list(len(self.intervals), name=str(self.formula) + ".active_interval")
+        for i in range(len(self.intervals)):
+            self.intervals[i].compliment(m, gap, self.formula, active_interval[i])
 
     def reset(self):
         self.formula.reset()
 
 
-class RealRange(object):
+class FloatInterval(object):
     def __init__(self, lower, upper):
         self.lower = lower
         self.upper = upper
@@ -84,7 +84,7 @@ class RealRange(object):
         pass
 
 
-class ClosedRange(RealRange):
+class ClosedInterval(FloatInterval):
     def configure(self, m, gap, formula, active):
         m.add_indicator(active, formula.val >= self.lower)
         m.add_indicator(active, formula.val <= self.upper)
@@ -94,12 +94,12 @@ class ClosedRange(RealRange):
         m.add_indicator(active, formula.val >= self.upper + gap, 0)
 
 
-class Point(ClosedRange):
+class Point(ClosedInterval):
     def __init__(self, point):
         super().__init__(point, point)
 
 
-class OpenRange(RealRange):
+class OpenInterval(FloatInterval):
     def configure(self, m, gap, formula, active):
         m.add_indicator(active, formula.val >= self.lower + gap)
         m.add_indicator(active, formula.val <= self.upper - gap)
@@ -109,7 +109,7 @@ class OpenRange(RealRange):
         m.add_indicator(active, formula.val >= self.upper, 0)
 
 
-class OpenLowerRange(RealRange):
+class OpenLowerInterval(FloatInterval):
     def configure(self, m, gap, formula, active):
         m.add_indicator(active, formula.val >= self.lower + gap)
         m.add_indicator(active, formula.val <= self.upper)
@@ -119,7 +119,7 @@ class OpenLowerRange(RealRange):
         m.add_indicator(active, formula.val >= self.upper + gap, 0)
 
 
-class OpenUpperRange(RealRange):
+class OpenUpperInterval(FloatInterval):
     def configure(self, m, gap, formula, active):
         m.add_indicator(active, formula.val >= self.lower)
         m.add_indicator(active, formula.val <= self.upper - gap)

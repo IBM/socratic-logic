@@ -10,10 +10,10 @@ def demo_cat():
     dog = Prop("dog")
     pet = Prop("pet")
 
-    s1 = SimpleSentence(Implies(And(whiskers, tail), cat), [ClosedRange(.75, 1)])
-    s2 = SimpleSentence(Implies(Or(cat, dog), pet, logic=Logic.GODEL), [ClosedRange(.75, 1)])
-    s3 = SimpleSentence(Not(And(cat, dog)), ClosedRange(1, 1))  # Single range not given as list
-    s4 = SimpleSentence(WeakAnd(cat, dog), 1)  # Atomic range given as Number
+    s1 = SimpleSentence(Implies(And(whiskers, tail), cat), [ClosedInterval(.75, 1)])
+    s2 = SimpleSentence(Implies(Or(cat, dog), pet, logic=Logic.GODEL), [ClosedInterval(.75, 1)])
+    s3 = SimpleSentence(Not(And(cat, dog)), ClosedInterval(1, 1))  # Single interval not given as list
+    s4 = SimpleSentence(WeakAnd(cat, dog), 1)  # Atomic interval given as Number
 
     theory1 = Theory(s1, s2)
     theory2 = Theory(s1, s2, s3)
@@ -21,8 +21,8 @@ def demo_cat():
 
     goal = Not(tail)
 
-    query1 = SimpleSentence(Implies(And(whiskers, Not(pet)), goal), [ClosedRange(.5, 1)])
-    query2 = SimpleSentence(Implies(And(whiskers, dog), goal), [ClosedRange(.5, 1)])
+    query1 = SimpleSentence(Implies(And(whiskers, Not(pet)), goal), [ClosedInterval(.5, 1)])
+    query2 = SimpleSentence(Implies(And(whiskers, dog), goal), [ClosedInterval(.5, 1)])
 
     print("theory1 satisfiable: ", theory2.satisfiable())
     print("theory2 satisfiable: ", theory2.satisfiable())
