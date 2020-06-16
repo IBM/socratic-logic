@@ -155,5 +155,28 @@ class BooleanTestCase(unittest.TestCase):
         clock(self.boolean_test, Logic.LUKASIEWICZ)
 
 
+class StressTestCase(unittest.TestCase):
+    def stress_test(self, logic):
+        phi = Prop("phi")
+        psi = Prop("psi")
+
+        formula = Implies(Implies(phi, psi), Implies(Implies(Not(phi), psi), psi))
+
+        s = SimpleSentence(formula, [ClosedInterval(1/(k + 1), 1/k) for k in range(2,10000)] + [ClosedInterval(.5, 1)])
+
+        boolean_theory = Theory(
+            SimpleSentence(phi, [0] + [ClosedInterval(1 - 1/k, 1 - 1/(k + 1)) for k in range(2,10000)]),
+            SimpleSentence(psi, [0] + [ClosedInterval(1 - 1/k, 1 - 1/(k + 1)) for k in range(2,10000)]),
+        )
+
+        self.assertTrue(boolean_theory.entails(s, logic=logic))
+
+    def test_stress_godel(self):
+        clock(self.stress_test, Logic.GODEL)
+
+    def test_stress_lukasiewicz(self):
+        clock(self.stress_test, Logic.LUKASIEWICZ)
+
+
 if __name__ == '__main__':
     unittest.main()
