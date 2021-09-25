@@ -1,4 +1,5 @@
 import itertools
+import random
 import unittest
 
 from socratic.clock import *
@@ -11,9 +12,7 @@ class SatTestCase(unittest.TestCase):
         x = [Prop("x_%d" % k) for k in range(k)]
 
         s = [SimpleSentence(Or(c), 1) for c in itertools.product(*([a, Inv(a)] for a in x))]
-
         full_theory = Theory(s)
-        theories = [Theory(s[:i] + s[i+1:]) for i in range(len(s))]
 
         # The problem is unsatisfiable in Godel (and classical) logic
         try:
@@ -26,14 +25,14 @@ class SatTestCase(unittest.TestCase):
             raise
 
         # Removing any one sentence renders it satisfiable
-        for theory in theories:
-            self.assertTrue(theory.satisfiable(logic=Logic.GODEL))
+        i = random.randrange(len(s))
+        partial_theory = Theory(s[:i] + s[i+1:])
+        self.assertTrue(clock(partial_theory.satisfiable, logic=Logic.GODEL))
 
         # The problem is likewise satisfiable in Lukasiewicz logic
         self.assertTrue(clock(full_theory.satisfiable, logic=Logic.LUKASIEWICZ))
 
         exclusions = [SimpleSentence(a, [OpenUpperInterval(0, 1/k), OpenLowerInterval((k-1)/k, 1)]) for a in x]
-
         excluded_theory = Theory(s + exclusions)
 
         # The problem becomes unsatisfiable again if propositions are forced to lie near 0 and 1
@@ -45,6 +44,11 @@ class SatTestCase(unittest.TestCase):
             excluded_theory.m.print_solution(print_zeros=True)
             print()
             raise
+
+        # Removing any one sentence again renders it satisfiable
+        i = random.randrange(len(s))
+        partial_excluded_theory = Theory(s[:i] + s[i+1:] + exclusions)
+        self.assertTrue(clock(partial_excluded_theory.satisfiable, logic=Logic.LUKASIEWICZ))
 
     def test_sat(self):
         for k in range(3, 7):
