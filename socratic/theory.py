@@ -12,7 +12,7 @@ class Theory(object):
         if len(args) == 1 and isinstance(args[0], Iterable):
             args = args[0]
 
-        self.sentences = args
+        self.sentences = list(args)
 
         self.m = None
         self.gap = None
