@@ -14,6 +14,9 @@ class Formula(object):
 
     def configure(self, m, gap, logic):
         if self.val is None:
+            self.val = m.get_var_by_name(str(self))
+
+        if self.val is None:
             self.val = m.continuous_var(lb=0, ub=1, name=str(self))
 
             return True
