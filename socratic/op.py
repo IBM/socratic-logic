@@ -66,7 +66,7 @@ class Operator(Formula):
         self.operands = [Constant(arg) if isinstance(arg, Number) else arg for arg in args]
 
     def __str__(self):
-        logic_arg = ["logic=%s" % str(self.logic)] if self.logic is not None else []
+        logic_arg = ["logic=%s" % self.logic] if self.logic is not None else []
         return "%s(%s)" % (type(self).__name__, ", ".join(map(str, self.operands + logic_arg)))
 
     def configure(self, m, gap, logic):
@@ -99,7 +99,10 @@ class And(Operator):
 
 class WeakAnd(And):
     def __init__(self, *args):
-        super().__init__(*args, logic=Logic.GODEL)
+        super().__init__(*args)
+
+    def add_constraint(self, m, gap, logic):
+        super().add_constraint(m, gap, Logic.GODEL)
 
 
 class Or(Operator):
@@ -116,7 +119,10 @@ class Or(Operator):
 
 class WeakOr(Or):
     def __init__(self, *args):
-        super().__init__(*args, logic=Logic.GODEL)
+        super().__init__(*args)
+
+    def add_constraint(self, m, gap, logic):
+        super().add_constraint(m, gap, Logic.GODEL)
 
 
 class Implies(Operator):
@@ -153,13 +159,16 @@ class Not(Implies):
         self.arg = self.operands[0]
 
     def __str__(self):
-        logic_arg = ["logic=%s" % str(self.logic)] if self.logic is not None else []
+        logic_arg = ["logic=%s" % self.logic] if self.logic is not None else []
         return "%s(%s)" % (type(self).__name__, ", ".join([str(self.arg)] + logic_arg))
 
 
 class Inv(Not):
     def __init__(self, arg):
-        super().__init__(arg, logic=Logic.LUKASIEWICZ)
+        super().__init__(arg)
+
+    def add_constraint(self, m, gap, logic):
+        super().add_constraint(m, gap, Logic.LUKASIEWICZ)
 
 
 class Equiv(Operator):
