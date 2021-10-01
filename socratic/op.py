@@ -55,6 +55,9 @@ class Constant(Formula):
 
 
 class Operator(Formula):
+    @property
+    def symb(self): pass
+
     def __init__(self, *args, logic=None):
         super().__init__()
 
@@ -68,6 +71,9 @@ class Operator(Formula):
     def __repr__(self):
         logic_arg = [f"logic={self.logic}"] if self.logic is not None else []
         return f"{type(self).__name__}(%s)" % ", ".join(list(map(repr, self.operands)) + logic_arg)
+
+    def __str__(self):
+        return "(%s)" % f" {self.symb} ".join(map(str, self.operands))
 
     def configure(self, m, gap, logic):
         if super().configure(m, gap, logic):
@@ -86,6 +92,9 @@ class Operator(Formula):
 
 
 class And(Operator):
+    @property
+    def symb(self): return '⊗'
+
     def add_constraint(self, m, gap, logic):
         if self.logic is not None:
             logic = self.logic
@@ -98,6 +107,9 @@ class And(Operator):
 
 
 class WeakAnd(And):
+    @property
+    def symb(self): return '∧'
+
     def __init__(self, *args):
         super().__init__(*args)
 
@@ -106,6 +118,9 @@ class WeakAnd(And):
 
 
 class Or(Operator):
+    @property
+    def symb(self): return '⊕'
+
     def add_constraint(self, m, gap, logic):
         if self.logic is not None:
             logic = self.logic
@@ -118,6 +133,9 @@ class Or(Operator):
 
 
 class WeakOr(Or):
+    @property
+    def symb(self): return '∨'
+
     def __init__(self, *args):
         super().__init__(*args)
 
@@ -126,6 +144,9 @@ class WeakOr(Or):
 
 
 class Implies(Operator):
+    @property
+    def symb(self): return '→'
+
     def __init__(self, lhs, rhs, logic=None):
         super().__init__(lhs, rhs, logic=logic)
 
@@ -153,6 +174,9 @@ class Implies(Operator):
 
 
 class Not(Implies):
+    @property
+    def symb(self): return '¬'
+
     def __init__(self, arg, logic=None):
         super().__init__(arg, 0, logic=logic)
 
@@ -162,8 +186,14 @@ class Not(Implies):
         logic_arg = [f"logic={self.logic}"] if self.logic is not None else []
         return f"{type(self).__name__}(%s)" % ", ".join([repr(self.arg)] + logic_arg)
 
+    def __str__(self):
+        return self.symb + str(self.arg)
+
 
 class Inv(Not):
+    @property
+    def symb(self): return '∼'
+
     def __init__(self, arg):
         super().__init__(arg)
 
@@ -172,6 +202,9 @@ class Inv(Not):
 
 
 class Equiv(Operator):
+    @property
+    def symb(self): return '↔'
+
     def __init__(self, lhs, rhs, logic=None):
         super().__init__(lhs, rhs, logic=logic)
 
@@ -196,10 +229,16 @@ class Equiv(Operator):
 
 
 class Delta(Operator):
+    @property
+    def symb(self): return '△'
+
     def __init__(self, arg):
         super().__init__(arg)
 
         self.arg = self.operands[0]
+
+    def __str__(self):
+        return self.symb + str(self.arg)
 
     def add_constraint(self, m, gap, logic):
         arg_eq_one = m.binary_var(name=repr(self) + ".arg_eq_one")
