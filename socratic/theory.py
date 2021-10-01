@@ -56,7 +56,7 @@ class SimpleSentence(Sentence):
     def configure(self, m, gap, logic):
         self.formula.configure(m, gap, logic)
 
-        active_interval = m.binary_var_list(len(self.intervals), name=str(self.formula) + ".active_interval")
+        active_interval = m.binary_var_list(len(self.intervals), name=repr(self.formula) + ".active_interval")
         m.add_constraint(m.sum(active_interval) == 1)
         for i in range(len(self.intervals)):
             self.intervals[i].configure(m, gap, self.formula, active_interval[i])
@@ -64,7 +64,7 @@ class SimpleSentence(Sentence):
     def compliment(self, m, gap, logic):
         self.formula.configure(m, gap, logic)
 
-        active_interval = m.binary_var_list(len(self.intervals), name=str(self.formula) + ".active_interval")
+        active_interval = m.binary_var_list(len(self.intervals), name=repr(self.formula) + ".active_interval")
         for i in range(len(self.intervals)):
             self.intervals[i].compliment(m, gap, self.formula, active_interval[i])
 

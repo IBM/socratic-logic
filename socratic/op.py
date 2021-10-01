@@ -14,10 +14,10 @@ class Formula(object):
 
     def configure(self, m, gap, logic):
         if self.val is None:
-            self.val = m.get_var_by_name(str(self))
+            self.val = m.get_var_by_name(repr(self))
 
         if self.val is None:
-            self.val = m.continuous_var(lb=0, ub=1, name=str(self))
+            self.val = m.continuous_var(lb=0, ub=1, name=repr(self))
 
             return True
 
@@ -34,7 +34,7 @@ class Prop(Formula):
 
         self.name = name
 
-    def __str__(self):
+    def __repr__(self):
         return str(self.name)
 
 
@@ -44,8 +44,8 @@ class Constant(Formula):
 
         self.val = val
 
-    def __str__(self):
-        return str(self.val)
+    def __repr__(self):
+        return repr(self.val)
 
     def configure(self, m, gap, logic):
         pass
@@ -65,9 +65,9 @@ class Operator(Formula):
 
         self.operands = [Constant(arg) if isinstance(arg, Number) else arg for arg in args]
 
-    def __str__(self):
-        logic_arg = ["logic=%s" % self.logic] if self.logic is not None else []
-        return "%s(%s)" % (type(self).__name__, ", ".join(map(str, self.operands + logic_arg)))
+    def __repr__(self):
+        logic_arg = [f"logic={self.logic}"] if self.logic is not None else []
+        return f"{type(self).__name__}(%s)" % ", ".join(list(map(repr, self.operands)) + logic_arg)
 
     def configure(self, m, gap, logic):
         if super().configure(m, gap, logic):
@@ -137,7 +137,7 @@ class Implies(Operator):
             logic = self.logic
 
         if logic is Logic.GODEL:
-            lhs_le_rhs = m.binary_var(name=str(self) + ".lhs_le_rhs")
+            lhs_le_rhs = m.binary_var(name=repr(self) + ".lhs_le_rhs")
 
             m.add_indicator(lhs_le_rhs, self.lhs.val <= self.rhs.val)
             m.add_indicator(lhs_le_rhs, self.val == 1)
@@ -158,9 +158,9 @@ class Not(Implies):
 
         self.arg = self.operands[0]
 
-    def __str__(self):
-        logic_arg = ["logic=%s" % self.logic] if self.logic is not None else []
-        return "%s(%s)" % (type(self).__name__, ", ".join([str(self.arg)] + logic_arg))
+    def __repr__(self):
+        logic_arg = [f"logic={self.logic}"] if self.logic is not None else []
+        return f"{type(self).__name__}(%s)" % ", ".join([repr(self.arg)] + logic_arg)
 
 
 class Inv(Not):
@@ -183,7 +183,7 @@ class Equiv(Operator):
             logic = self.logic
 
         if logic is Logic.GODEL:
-            lhs_eq_rhs = m.binary_var(name=str(self) + ".lhs_eq_rhs")
+            lhs_eq_rhs = m.binary_var(name=repr(self) + ".lhs_eq_rhs")
 
             m.add_indicator(lhs_eq_rhs, self.lhs.val == self.rhs.val)
             m.add_indicator(lhs_eq_rhs, self.val == 1)
@@ -202,7 +202,7 @@ class Delta(Operator):
         self.arg = self.operands[0]
 
     def add_constraint(self, m, gap, logic):
-        arg_eq_one = m.binary_var(name=str(self) + ".arg_eq_one")
+        arg_eq_one = m.binary_var(name=repr(self) + ".arg_eq_one")
 
         m.add_indicator(arg_eq_one, self.arg.val == 1)
         m.add_indicator(arg_eq_one, self.val == 1)
