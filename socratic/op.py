@@ -180,11 +180,8 @@ class Not(Implies):
     def __init__(self, arg, logic=None):
         super().__init__(arg, 0, logic=logic)
 
+        self.operands = self.operands[:1]
         self.arg = self.operands[0]
-
-    def __repr__(self):
-        logic_arg = [f"logic={self.logic}"] if self.logic is not None else []
-        return f"{type(self).__name__}(%s)" % ", ".join([repr(self.arg)] + logic_arg)
 
     def __str__(self):
         return self.symb + str(self.arg)
