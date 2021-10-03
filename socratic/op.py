@@ -69,10 +69,19 @@ class Operator(Formula):
 
         self.logic = logic
 
-        if len(args) == 1 and isinstance(args[0], Iterable):
+        if len(args) == 1 and isinstance(args[0], Iterable) and not isinstance(args[0], str):
             args = args[0]
 
-        self.operands = [Constant(arg) if isinstance(arg, Number) else arg for arg in args]
+        def init_operand(arg):
+            if isinstance(arg, str):
+                return Prop(arg)
+
+            if isinstance(arg, Number):
+                return Constant(arg)
+
+            return arg
+
+        self.operands = [init_operand(arg) for arg in args]
 
     def __repr__(self):
         logic_arg = [f"logic={self.logic}"] if self.logic is not None else []
