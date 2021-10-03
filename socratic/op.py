@@ -35,6 +35,9 @@ class Prop(Formula):
         self.name = name
 
     def __repr__(self):
+        return f"{type(self).__name__}(%s)" % repr(self.name)
+
+    def __str__(self):
         return str(self.name)
 
 
@@ -45,7 +48,10 @@ class Constant(Formula):
         self.val = val
 
     def __repr__(self):
-        return repr(self.val)
+        return f"{type(self).__name__}(%s)" % repr(self.val)
+
+    def __str__(self):
+        return str(self.val)
 
     def configure(self, m, gap, logic):
         pass
