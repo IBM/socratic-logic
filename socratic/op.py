@@ -95,6 +95,8 @@ class Operator(Formula):
             for operand in self.operands:
                 operand.configure(m, gap, logic)
 
+            if self.logic is not None:
+                logic = self.logic
             self.add_constraint(m, gap, logic)
 
     def add_constraint(self, m, gap, logic):
@@ -111,9 +113,6 @@ class And(Operator):
     def symb(self): return '⊗'
 
     def add_constraint(self, m, gap, logic):
-        if self.logic is not None:
-            logic = self.logic
-
         if logic is Logic.GODEL:
             m.add_constraint(self.val == m.min(operand.val for operand in self.operands))
 
@@ -137,9 +136,6 @@ class Or(Operator):
     def symb(self): return '⊕'
 
     def add_constraint(self, m, gap, logic):
-        if self.logic is not None:
-            logic = self.logic
-
         if logic is Logic.GODEL:
             m.add_constraint(self.val == m.max(operand.val for operand in self.operands))
 
@@ -169,9 +165,6 @@ class Implies(Operator):
         self.rhs = self.operands[1]
 
     def add_constraint(self, m, gap, logic):
-        if self.logic is not None:
-            logic = self.logic
-
         if logic is Logic.GODEL:
             lhs_le_rhs = m.binary_var(name=repr(self) + ".lhs_le_rhs")
 
@@ -224,9 +217,6 @@ class Equiv(Operator):
         self.rhs = self.operands[1]
 
     def add_constraint(self, m, gap, logic):
-        if self.logic is not None:
-            logic = self.logic
-
         if logic is Logic.GODEL:
             lhs_eq_rhs = m.binary_var(name=repr(self) + ".lhs_eq_rhs")
 
