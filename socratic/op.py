@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from enum import Enum
 from numbers import Number
@@ -8,7 +9,7 @@ class Logic(Enum):
     LUKASIEWICZ = 1
 
 
-class Formula(object):
+class Formula(ABC):
     def __init__(self):
         self.val = float("nan")
 
@@ -79,9 +80,10 @@ class Constant(Formula):
         pass
 
 
-class Operator(Formula):
+class Operator(Formula, ABC):
     @property
-    def symb(self): return '_'
+    @abstractmethod
+    def symb(self): pass
 
     def __init__(self, *args, logic=None):
         super().__init__()
@@ -133,6 +135,7 @@ class Operator(Formula):
                 logic = self.logic
             self.add_constraints(m, gap, logic)
 
+    @abstractmethod
     def add_constraints(self, m, gap, logic):
         pass
 

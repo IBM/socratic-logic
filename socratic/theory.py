@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from numbers import Number
 
@@ -41,7 +42,7 @@ class Theory(object):
         return res
 
 
-class Sentence(object):
+class Sentence(ABC):
     pass
 
 
@@ -72,14 +73,16 @@ class SimpleSentence(Sentence):
             self.intervals[i].compliment(m, gap, self.formula, active_interval[i])
 
 
-class FloatInterval(object):
+class FloatInterval(ABC):
     def __init__(self, lower, upper):
         self.lower = lower
         self.upper = upper
 
+    @abstractmethod
     def configure(self, m, gap, formula, active):
         pass
 
+    @abstractmethod
     def compliment(self, m, gap, formula, active):
         pass
 
