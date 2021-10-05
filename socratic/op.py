@@ -14,10 +14,11 @@ class Formula(object):
 
     def configure(self, m, gap, logic):
         if self.val is None:
-            self.val = m.get_var_by_name(repr(self))
+            var_name = repr(self) + ".val"
+            self.val = m.get_var_by_name(var_name)
 
             if self.val is None:
-                self.val = m.continuous_var(lb=0, ub=1, name=repr(self))
+                self.val = m.continuous_var(lb=0, ub=1, name=var_name)
 
             return True
 
@@ -103,8 +104,9 @@ class Operator(Formula):
         pass
 
     def add_constraint(self, m, constraint, name="constraint"):
-        if m.get_constraint_by_name(f"{repr(self)}.{name}") is None:
-            return m.add_constraint(constraint, ctname=f"{repr(self)}.{name}")
+        ct_name = f"{repr(self)}.{name}"
+        if m.get_constraint_by_name(ct_name) is None:
+            return m.add_constraint(constraint, ctname=ct_name)
 
     def reset(self):
         if super().reset():
@@ -170,8 +172,9 @@ class Implies(Operator):
 
     def add_constraints(self, m, gap, logic):
         if logic is Logic.GODEL:
-            if m.get_var_by_name(repr(self) + ".lhs_le_rhs") is None:
-                lhs_le_rhs = m.binary_var(name=repr(self) + ".lhs_le_rhs")
+            var_name = repr(self) + ".lhs_le_rhs"
+            if m.get_var_by_name(var_name) is None:
+                lhs_le_rhs = m.binary_var(name=var_name)
 
                 m.add_indicator(lhs_le_rhs, self.lhs.val <= self.rhs.val)
                 m.add_indicator(lhs_le_rhs, self.val == 1)
@@ -223,8 +226,9 @@ class Equiv(Operator):
 
     def add_constraints(self, m, gap, logic):
         if logic is Logic.GODEL:
-            if m.get_var_by_name(repr(self) + ".lhs_eq_rhs") is None:
-                lhs_eq_rhs = m.binary_var(name=repr(self) + ".lhs_eq_rhs")
+            var_name = repr(self) + ".lhs_eq_rhs"
+            if m.get_var_by_name(var_name) is None:
+                lhs_eq_rhs = m.binary_var(name=var_name)
 
                 m.add_indicator(lhs_eq_rhs, self.lhs.val == self.rhs.val)
                 m.add_indicator(lhs_eq_rhs, self.val == 1)
@@ -249,8 +253,9 @@ class Delta(Operator):
         return self.symb + str(self.arg)
 
     def add_constraints(self, m, gap, logic):
-        if m.get_var_by_name(repr(self) + ".arg_eq_one") is None:
-            arg_eq_one = m.binary_var(name=repr(self) + ".arg_eq_one")
+        var_name = repr(self) + ".arg_eq_one"
+        if m.get_var_by_name(var_name) is None:
+            arg_eq_one = m.binary_var(name=var_name)
 
             m.add_indicator(arg_eq_one, self.arg.val == 1)
             m.add_indicator(arg_eq_one, self.val == 1)
