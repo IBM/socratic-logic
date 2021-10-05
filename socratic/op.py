@@ -12,6 +12,12 @@ class Formula(object):
     def __init__(self):
         self.val = "unconfigured"
 
+    def reset(self):
+        if self.val is not None:
+            self.val = None
+
+            return True
+
     def configure(self, m, gap, logic):
         if self.val is None:
             var_name = repr(self) + ".val"
@@ -19,12 +25,6 @@ class Formula(object):
 
             if self.val is None:
                 self.val = m.continuous_var(lb=0, ub=1, name=var_name)
-
-            return True
-
-    def reset(self):
-        if self.val is not None:
-            self.val = None
 
             return True
 
@@ -54,10 +54,10 @@ class Constant(Formula):
     def __str__(self):
         return str(self.val)
 
-    def configure(self, m, gap, logic):
+    def reset(self):
         pass
 
-    def reset(self):
+    def configure(self, m, gap, logic):
         pass
 
 
@@ -91,6 +91,11 @@ class Operator(Formula):
     def __str__(self):
         return "(%s)" % f" {self.symb} ".join(map(str, self.operands))
 
+    def reset(self):
+        if super().reset():
+            for operand in self.operands:
+                operand.reset()
+
     def configure(self, m, gap, logic):
         if super().configure(m, gap, logic):
             for operand in self.operands:
@@ -107,11 +112,6 @@ class Operator(Formula):
         ct_name = f"{repr(self)}.{name}"
         if m.get_constraint_by_name(ct_name) is None:
             return m.add_constraint(constraint, ctname=ct_name)
-
-    def reset(self):
-        if super().reset():
-            for operand in self.operands:
-                operand.reset()
 
 
 class And(Operator):

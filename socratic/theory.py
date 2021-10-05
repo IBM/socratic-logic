@@ -53,6 +53,9 @@ class SimpleSentence(Sentence):
         self.formula = formula
         self.intervals = [Point(r) if isinstance(r, Number) else r for r in intervals]
 
+    def reset(self):
+        self.formula.reset()
+
     def configure(self, m, gap, logic):
         self.formula.configure(m, gap, logic)
 
@@ -67,9 +70,6 @@ class SimpleSentence(Sentence):
         active_interval = m.binary_var_list(len(self.intervals), name=repr(self.formula) + ".active_interval")
         for i in range(len(self.intervals)):
             self.intervals[i].compliment(m, gap, self.formula, active_interval[i])
-
-    def reset(self):
-        self.formula.reset()
 
 
 class FloatInterval(object):
