@@ -21,7 +21,7 @@ class Theory(object):
         return not self.entails(None, logic)
 
     def entails(self, query, logic=Logic.LUKASIEWICZ):
-        self.m = mp.model.Model()
+        self.m = mp.model.Model(cts_by_name=True)
         self.m.float_precision = 16
         self.gap = self.m.continuous_var(lb=0, ub=1, name="gap")
 
