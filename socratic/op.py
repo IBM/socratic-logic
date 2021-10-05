@@ -35,6 +35,15 @@ class Prop(Formula):
 
         self.name = name
 
+    def __eq__(self, other):
+        if isinstance(other, str):
+            return self.name == other
+
+        return type(other) is Prop and self.name == other.name
+
+    def __hash__(self):
+        return super().__hash__()
+
     def __repr__(self):
         return f"{type(self).__name__}({repr(self.name)})"
 
@@ -47,6 +56,15 @@ class Constant(Formula):
         super().__init__()
 
         self.val = val
+
+    def __eq__(self, other):
+        if isinstance(other, Number):
+            return self.val == other
+
+        return type(other) is Constant and self.val == other.val
+
+    def __hash__(self):
+        return super().__hash__()
 
     def __repr__(self):
         return f"{type(self).__name__}({repr(self.val)})"
@@ -84,6 +102,14 @@ class Operator(Formula):
             return arg
 
         self.operands = [init_operand(arg) for arg in args]
+
+    def __eq__(self, other):
+        return (type(self) is type(other) and
+                self.logic is other.logic and
+                self.operands == other.operands)
+
+    def __hash__(self):
+        return super().__hash__()
 
     def __repr__(self):
         logic_arg = [f"logic={self.logic}"] if self.logic is not None else []
