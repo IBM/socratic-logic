@@ -10,7 +10,7 @@ class Logic(Enum):
 
 class Formula(object):
     def __init__(self):
-        self.val = "unconfigured"
+        self.val = float("nan")
 
     def reset(self):
         if self.val is not None:
@@ -36,7 +36,7 @@ class Prop(Formula):
         self.name = name
 
     def __repr__(self):
-        return f"{type(self).__name__}(%s)" % repr(self.name)
+        return f"{type(self).__name__}({repr(self.name)})"
 
     def __str__(self):
         return str(self.name)
@@ -49,7 +49,7 @@ class Constant(Formula):
         self.val = val
 
     def __repr__(self):
-        return f"{type(self).__name__}(%s)" % repr(self.val)
+        return f"{type(self).__name__}({repr(self.val)})"
 
     def __str__(self):
         return str(self.val)
@@ -63,15 +63,16 @@ class Constant(Formula):
 
 class Operator(Formula):
     @property
-    def symb(self): pass
+    def symb(self): return '_'
 
     def __init__(self, *args, logic=None):
         super().__init__()
 
         self.logic = logic
 
-        if len(args) == 1 and isinstance(args[0], Iterable) and not isinstance(args[0], str):
-            args = args[0]
+        if len(args) == 1 and isinstance(args[0], Iterable):
+            if not isinstance(args[0], str):
+                args = args[0]
 
         def init_operand(arg):
             if isinstance(arg, str):
@@ -86,20 +87,21 @@ class Operator(Formula):
 
     def __repr__(self):
         logic_arg = [f"logic={self.logic}"] if self.logic is not None else []
-        return f"{type(self).__name__}(%s)" % ", ".join(list(map(repr, self.operands)) + logic_arg)
+        arg_repr = ", ".join(list(map(repr, self.operands)) + logic_arg)
+        return f"{type(self).__name__}({arg_repr})"
 
     def __str__(self):
         return "(%s)" % f" {self.symb} ".join(map(str, self.operands))
 
     def reset(self):
         if super().reset():
-            for operand in self.operands:
-                operand.reset()
+            for op in self.operands:
+                op.reset()
 
     def configure(self, m, gap, logic):
         if super().configure(m, gap, logic):
-            for operand in self.operands:
-                operand.configure(m, gap, logic)
+            for op in self.operands:
+                op.configure(m, gap, logic)
 
             if self.logic is not None:
                 logic = self.logic
@@ -120,10 +122,10 @@ class And(Operator):
 
     def add_constraints(self, m, gap, logic):
         if logic is Logic.GODEL:
-            self.add_constraint(m, self.val == m.min(operand.val for operand in self.operands))
+            self.add_constraint(m, self.val == m.min(op.val for op in self.operands))
 
         else:  # logic is Logic.LUKASIEWICZ
-            self.add_constraint(m, self.val == m.max(0, 1 - m.sum(1 - operand.val for operand in self.operands)))
+            self.add_constraint(m, self.val == m.max(0, 1 - m.sum(1 - op.val for op in self.operands)))
 
 
 class WeakAnd(And):
@@ -143,10 +145,10 @@ class Or(Operator):
 
     def add_constraints(self, m, gap, logic):
         if logic is Logic.GODEL:
-            self.add_constraint(m, self.val == m.max(operand.val for operand in self.operands))
+            self.add_constraint(m, self.val == m.max(op.val for op in self.operands))
 
         else:  # logic is Logic.LUKASIEWICZ
-            self.add_constraint(m, self.val == m.min(1, m.sum(operand.val for operand in self.operands)))
+            self.add_constraint(m, self.val == m.min(1, m.sum(op.val for op in self.operands)))
 
 
 class WeakOr(Or):
