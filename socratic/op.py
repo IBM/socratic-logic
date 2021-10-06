@@ -149,15 +149,28 @@ class BinaryOperator(Operator, ABC):
     def __init__(self, lhs, rhs, logic=None):
         super().__init__(lhs, rhs, logic=logic)
 
-        self.lhs = self.operands[0]
-        self.rhs = self.operands[1]
+    @property
+    def lhs(self): return self.operands[0]
+
+    @lhs.setter
+    def lhs(self, value): self.operands[0] = value
+
+    @property
+    def rhs(self): return self.operands[1]
+
+    @rhs.setter
+    def rhs(self, value): self.operands[1] = value
 
 
 class UnaryOperator(Operator, ABC):
     def __init__(self, arg, logic=None):
         super().__init__(arg, logic=logic)
 
-        self.arg = self.operands[0]
+    @property
+    def arg(self): return self.operands[0]
+
+    @arg.setter
+    def arg(self, value): self.operands[0] = value
 
     def __str__(self):
         return self.symb + str(self.arg)
