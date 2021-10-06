@@ -322,3 +322,41 @@ class Nabla(UnaryOperator):
 
             m.add_indicator(arg_eq_zero, self.arg.val >= gap, 0)
             m.add_indicator(arg_eq_zero, self.val == 1, 0)
+
+
+class Coefficient(UnaryOperator):
+    @property
+    def symb(self): return '⋅'
+
+    def __init__(self, coef, arg):
+        super().__init__(arg)
+
+        self.coef = coef
+
+    def __repr__(self):
+        return f"{type(self).__name__}({repr(self.coef)}, {repr(self.arg)})"
+
+    def __str__(self):
+        return str(self.coef) + self.symb + str(self.arg)
+
+    def add_constraints(self, m, gap, logic):
+        self.add_constraint(m, self.val == m.min(1, self.coef * self.arg.val))
+
+
+class Exponent(UnaryOperator):
+    @property
+    def symb(self): return '^'
+
+    def __init__(self, expo, arg):
+        super().__init__(arg)
+
+        self.expo = expo
+
+    def __repr__(self):
+        return f"{type(self).__name__}({repr(self.expo)}, {repr(self.arg)})"
+
+    def __str__(self):
+        return str(self.arg) + self.symb + str(self.expo)
+
+    def add_constraints(self, m, gap, logic):
+        self.add_constraint(m, self.val == m.max(0, 1 - self.expo * (1 - self.arg.val)))
