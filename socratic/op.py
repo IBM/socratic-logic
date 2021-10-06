@@ -303,3 +303,22 @@ class Delta(UnaryOperator):
 
             m.add_indicator(arg_eq_one, self.arg.val <= 1 - gap, 0)
             m.add_indicator(arg_eq_one, self.val == 0, 0)
+
+
+class Nabla(UnaryOperator):
+    @property
+    def symb(self): return '▽'
+
+    def __init__(self, arg):
+        super().__init__(arg)
+
+    def add_constraints(self, m, gap, logic):
+        var_name = repr(self) + ".arg_eq_zero"
+        if m.get_var_by_name(var_name) is None:
+            arg_eq_zero = m.binary_var(name=var_name)
+
+            m.add_indicator(arg_eq_zero, self.arg.val == 0)
+            m.add_indicator(arg_eq_zero, self.val == 0)
+
+            m.add_indicator(arg_eq_zero, self.arg.val >= gap, 0)
+            m.add_indicator(arg_eq_zero, self.val == 1, 0)
