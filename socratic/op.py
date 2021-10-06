@@ -145,6 +145,24 @@ class Operator(Formula, ABC):
             return m.add_constraint(constraint, ctname=ct_name)
 
 
+class BinaryOperator(Operator, ABC):
+    def __init__(self, lhs, rhs, logic=None):
+        super().__init__(lhs, rhs, logic=logic)
+
+        self.lhs = self.operands[0]
+        self.rhs = self.operands[1]
+
+
+class UnaryOperator(Operator, ABC):
+    def __init__(self, arg, logic=None):
+        super().__init__(arg, logic=logic)
+
+        self.arg = self.operands[0]
+
+    def __str__(self):
+        return self.symb + str(self.arg)
+
+
 class And(Operator):
     @property
     def symb(self): return '⊗'
@@ -191,15 +209,9 @@ class WeakOr(Or):
         super().add_constraints(m, gap, Logic.GODEL)
 
 
-class Implies(Operator):
+class Implies(BinaryOperator):
     @property
     def symb(self): return '→'
-
-    def __init__(self, lhs, rhs, logic=None):
-        super().__init__(lhs, rhs, logic=logic)
-
-        self.lhs = self.operands[0]
-        self.rhs = self.operands[1]
 
     def add_constraints(self, m, gap, logic):
         if logic is Logic.GODEL:
@@ -220,18 +232,14 @@ class Implies(Operator):
                 self.add_constraint(m, self.val == m.min(1, 1 - self.lhs.val + self.rhs.val))
 
 
-class Not(Implies):
+class Not(UnaryOperator):
     @property
     def symb(self): return '¬'
 
-    def __init__(self, arg, logic=None):
-        super().__init__(arg, 0, logic=logic)
-
-        self.operands = self.operands[:1]
-        self.arg = self.operands[0]
-
-    def __str__(self):
-        return self.symb + str(self.arg)
+    def add_constraints(self, m, gap, logic):
+        impl = Implies(self.arg, 0, logic=logic)
+        impl.val = self.val
+        impl.add_constraints(m, gap, logic)
 
 
 class Inv(Not):
@@ -245,15 +253,9 @@ class Inv(Not):
         super().add_constraints(m, gap, Logic.LUKASIEWICZ)
 
 
-class Equiv(Operator):
+class Equiv(BinaryOperator):
     @property
     def symb(self): return '↔'
-
-    def __init__(self, lhs, rhs, logic=None):
-        super().__init__(lhs, rhs, logic=logic)
-
-        self.lhs = self.operands[0]
-        self.rhs = self.operands[1]
 
     def add_constraints(self, m, gap, logic):
         if logic is Logic.GODEL:
@@ -271,17 +273,12 @@ class Equiv(Operator):
             self.add_constraint(m, self.val == 1 - m.abs(self.lhs.val - self.rhs.val))
 
 
-class Delta(Operator):
+class Delta(UnaryOperator):
     @property
     def symb(self): return '△'
 
     def __init__(self, arg):
         super().__init__(arg)
-
-        self.arg = self.operands[0]
-
-    def __str__(self):
-        return self.symb + str(self.arg)
 
     def add_constraints(self, m, gap, logic):
         var_name = repr(self) + ".arg_eq_one"
