@@ -145,37 +145,6 @@ class Operator(Formula, ABC):
             return m.add_constraint(constraint, ctname=ct_name)
 
 
-class BinaryOperator(Operator, ABC):
-    def __init__(self, lhs, rhs, logic=None):
-        super().__init__(lhs, rhs, logic=logic)
-
-    @property
-    def lhs(self): return self.operands[0]
-
-    @lhs.setter
-    def lhs(self, value): self.operands[0] = value
-
-    @property
-    def rhs(self): return self.operands[1]
-
-    @rhs.setter
-    def rhs(self, value): self.operands[1] = value
-
-
-class UnaryOperator(Operator, ABC):
-    def __init__(self, arg, logic=None):
-        super().__init__(arg, logic=logic)
-
-    @property
-    def arg(self): return self.operands[0]
-
-    @arg.setter
-    def arg(self, value): self.operands[0] = value
-
-    def __str__(self):
-        return self.symb + str(self.arg)
-
-
 class And(Operator):
     @property
     def symb(self): return '⊗'
@@ -222,6 +191,23 @@ class WeakOr(Or):
         super().add_constraints(m, gap, Logic.GODEL)
 
 
+class BinaryOperator(Operator, ABC):
+    def __init__(self, lhs, rhs, logic=None):
+        super().__init__(lhs, rhs, logic=logic)
+
+    @property
+    def lhs(self): return self.operands[0]
+
+    @lhs.setter
+    def lhs(self, value): self.operands[0] = value
+
+    @property
+    def rhs(self): return self.operands[1]
+
+    @rhs.setter
+    def rhs(self, value): self.operands[1] = value
+
+
 class Implies(BinaryOperator):
     @property
     def symb(self): return '→'
@@ -245,6 +231,40 @@ class Implies(BinaryOperator):
                 self.add_constraint(m, self.val == m.min(1, 1 - self.lhs.val + self.rhs.val))
 
 
+class Equiv(BinaryOperator):
+    @property
+    def symb(self): return '↔'
+
+    def add_constraints(self, m, gap, logic):
+        if logic is Logic.GODEL:
+            var_name = repr(self) + ".lhs_eq_rhs"
+            if m.get_var_by_name(var_name) is None:
+                lhs_eq_rhs = m.binary_var(name=var_name)
+
+                m.add_indicator(lhs_eq_rhs, self.lhs.val == self.rhs.val)
+                m.add_indicator(lhs_eq_rhs, self.val == 1)
+
+                m.add_indicator(lhs_eq_rhs, m.abs(self.lhs.val - self.rhs.val) >= gap, 0)
+                m.add_indicator(lhs_eq_rhs, self.val == m.min(self.lhs.val, self.rhs.val), 0)
+
+        else:  # logic is Logic.LUKASIEWICZ
+            self.add_constraint(m, self.val == 1 - m.abs(self.lhs.val - self.rhs.val))
+
+
+class UnaryOperator(Operator, ABC):
+    def __init__(self, arg, logic=None):
+        super().__init__(arg, logic=logic)
+
+    @property
+    def arg(self): return self.operands[0]
+
+    @arg.setter
+    def arg(self, value): self.operands[0] = value
+
+    def __str__(self):
+        return self.symb + str(self.arg)
+
+
 class Not(UnaryOperator):
     @property
     def symb(self): return '¬'
@@ -264,26 +284,6 @@ class Inv(Not):
 
     def add_constraints(self, m, gap, logic):
         super().add_constraints(m, gap, Logic.LUKASIEWICZ)
-
-
-class Equiv(BinaryOperator):
-    @property
-    def symb(self): return '↔'
-
-    def add_constraints(self, m, gap, logic):
-        if logic is Logic.GODEL:
-            var_name = repr(self) + ".lhs_eq_rhs"
-            if m.get_var_by_name(var_name) is None:
-                lhs_eq_rhs = m.binary_var(name=var_name)
-
-                m.add_indicator(lhs_eq_rhs, self.lhs.val == self.rhs.val)
-                m.add_indicator(lhs_eq_rhs, self.val == 1)
-
-                m.add_indicator(lhs_eq_rhs, m.abs(self.lhs.val - self.rhs.val) >= gap, 0)
-                m.add_indicator(lhs_eq_rhs, self.val == m.min(self.lhs.val, self.rhs.val), 0)
-
-        else:  # logic is Logic.LUKASIEWICZ
-            self.add_constraint(m, self.val == 1 - m.abs(self.lhs.val - self.rhs.val))
 
 
 class Delta(UnaryOperator):
