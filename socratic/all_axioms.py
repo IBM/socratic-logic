@@ -62,7 +62,7 @@ def all_axioms():
                     for perm in all_perms(rhs_degree, lhs_degree):
                         f = Implies(lhs, apply_perm(rhs, perm))
 
-                        if empty_theory.entails(SimpleSentence(f, 1)):
+                        if empty_theory.entails(f):
                             axioms.append(f)
                             print("%4d." % len(axioms), f)
                         else:

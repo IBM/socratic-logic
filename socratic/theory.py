@@ -5,7 +5,7 @@ from numbers import Number
 import docplex.mp as mp
 import docplex.mp.model
 
-from socratic.op import Logic
+from socratic.op import Logic, Formula
 
 
 class Theory(object):
@@ -13,7 +13,7 @@ class Theory(object):
         if len(args) == 1 and isinstance(args[0], Iterable):
             args = args[0]
 
-        self.sentences = list(args)
+        self.sentences = [SimpleSentence(s, 1) if isinstance(s, Formula) else s for s in args]
 
         self.m = None
         self.gap = None
@@ -22,6 +22,9 @@ class Theory(object):
         return not self.entails(None, logic)
 
     def entails(self, query, logic=Logic.LUKASIEWICZ):
+        if isinstance(query, Formula):
+            query = SimpleSentence(query, 1)
+
         self.m = mp.model.Model(cts_by_name=True)
         self.m.float_precision = 16
         self.gap = self.m.continuous_var(lb=0, ub=1, name="gap")

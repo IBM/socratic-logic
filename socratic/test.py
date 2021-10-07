@@ -65,7 +65,7 @@ class HajekTestCase(unittest.TestCase):
             for formula in formulae:
                 with self.subTest(formula=str(formula), logic=str(logic)):
                     try:
-                        self.assertTrue(empty_theory.entails(SimpleSentence(formula, 1), logic=logic))
+                        self.assertTrue(empty_theory.entails(formula, logic=logic))
                     except AssertionError:
                         print()
                         print(str(formula), str(logic))
@@ -79,7 +79,7 @@ class HajekTestCase(unittest.TestCase):
         for logic in logics:
             for formula in formulae:
                 with self.subTest(formula=str(formula), logic=str(logic)):
-                    self.assertFalse(empty_theory.entails(SimpleSentence(formula, 1), logic=logic))
+                    self.assertFalse(empty_theory.entails(formula, logic=logic))
 
     def test_hajek_axioms(self):
         from socratic.hajek import axioms
@@ -139,18 +139,16 @@ class BooleanTestCase(unittest.TestCase):
 
         formula = Implies(Implies(phi, psi), Implies(Implies(Not(phi), psi), psi))
 
-        s = SimpleSentence(formula, 1)
-
         empty_theory = Theory()
 
-        self.assertFalse(empty_theory.entails(s, logic=logic))
+        self.assertFalse(empty_theory.entails(formula, logic=logic))
 
         boolean_theory = Theory(
             SimpleSentence(phi, [0, 1]),
             SimpleSentence(psi, [0, 1]),
         )
 
-        self.assertTrue(boolean_theory.entails(s, logic=logic))
+        self.assertTrue(boolean_theory.entails(formula, logic=logic))
 
     def test_boolean_godel(self):
         clock(self.boolean_test, Logic.GODEL)
