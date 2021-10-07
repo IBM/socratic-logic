@@ -2,7 +2,7 @@ from socratic.clock import *
 from socratic.op import *
 from socratic.theory import *
 
-MAX_SIZE = 4
+MAX_SIZE = 5
 
 
 def filter_props(f, max_so_far=0):
@@ -25,7 +25,7 @@ def filter_props(f, max_so_far=0):
 def all_axioms():
     empty_theory = Theory()
 
-    formulae = [[Prop(f"p{i}") for i in range(MAX_SIZE - 1)] + [0]]
+    formulae = [[Prop(f"p{i}") for i in range(MAX_SIZE - 1)]]
 
     for size in range(1, MAX_SIZE):
         formulae.append([])
@@ -37,6 +37,10 @@ def all_axioms():
 
                     if filter_props(f) and empty_theory.entails(SimpleSentence(f, 1)):
                         print(f)
+
+                if part == size - 1:
+                    f = Implies(lhs, 0)
+                    formulae[-1].append(f)
 
 
 if __name__ == "__main__":
