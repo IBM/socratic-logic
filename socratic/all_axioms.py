@@ -5,6 +5,23 @@ from socratic.theory import *
 MAX_SIZE = 4
 
 
+def filter_props(f, max_so_far=0):
+    if isinstance(f, Prop):
+        next_name = f"p{max_so_far}"
+        if f.name > next_name:
+            return
+        if f.name == next_name:
+            max_so_far += 1
+
+    if isinstance(f, Operator):
+        for op in f.operands:
+            max_so_far = filter_props(op, max_so_far)
+            if max_so_far is None:
+                return
+
+    return max_so_far
+
+
 def all_axioms():
     empty_theory = Theory()
 
@@ -18,7 +35,7 @@ def all_axioms():
                     f = Implies(lhs, rhs)
                     formulae[-1].append(f)
 
-                    if empty_theory.entails(SimpleSentence(f, 1)):
+                    if filter_props(f) and empty_theory.entails(SimpleSentence(f, 1)):
                         print(f)
 
 
