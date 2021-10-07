@@ -46,6 +46,26 @@ def apply_perm(f, perm):
     return f
 
 
+def specializes(f, a, mapping=None):
+    if mapping is None:
+        mapping = [None] * degree(a)
+
+    if isinstance(a, Prop):
+        i = index(a)
+        if mapping[i] is None:
+            mapping[i] = f
+            return True
+        return mapping[i] == f
+
+    if isinstance(a, Operator):
+        return (type(a) is type(f) and
+                a.logic is f.logic and
+                len(a.operands) == len(f.operands) and
+                all(specializes(ff, aa, mapping) for aa, ff in zip(a.operands, f.operands)))
+
+    return a == f
+
+
 def all_axioms():
     empty_theory = Theory()
 
@@ -62,11 +82,12 @@ def all_axioms():
                     for perm in all_perms(rhs_degree, lhs_degree):
                         f = Implies(lhs, apply_perm(rhs, perm))
 
-                        if empty_theory.entails(f):
-                            axioms.append(f)
-                            print("%4d." % len(axioms), f)
-                        else:
-                            formulae[-1].append(f)
+                        if not any(specializes(f, a) for a in axioms):
+                            if empty_theory.entails(f):
+                                axioms.append(f)
+                                print("%4d." % len(axioms), f)
+                            else:
+                                formulae[-1].append(f)
 
                 if part == size - 1:
                     f = Not(lhs)
