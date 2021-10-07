@@ -13,6 +13,17 @@ class Formula(ABC):
     def __init__(self):
         self.val = float("nan")
 
+    def __rmul__(self, other):
+        return Coefficient(other, self)
+
+    __mul__ = __rmul__
+
+    def __truediv__(self, other):
+        return Coefficient(1 / other, self)
+
+    def __pow__(self, other):
+        return Exponent(other, self)
+
     def reset(self):
         if self.val is not None:
             self.val = None
