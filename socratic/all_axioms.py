@@ -50,6 +50,7 @@ def all_axioms():
     empty_theory = Theory()
 
     formulae = [[Prop("p0")]]
+    axioms = []
 
     for size in range(1, MAX_SIZE):
         formulae.append([])
@@ -62,12 +63,13 @@ def all_axioms():
                         f = Implies(lhs, apply_perm(rhs, perm))
 
                         if empty_theory.entails(SimpleSentence(f, 1)):
-                            print(f)
+                            axioms.append(f)
+                            print("%4d." % len(axioms), f)
                         else:
                             formulae[-1].append(f)
 
                 if part == size - 1:
-                    f = Implies(lhs, 0)
+                    f = Not(lhs)
                     formulae[-1].append(f)
 
 
