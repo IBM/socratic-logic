@@ -4,7 +4,7 @@ from socratic.clock import *
 from socratic.op import *
 from socratic.theory import *
 
-MAX_SIZE = 5
+MAX_SIZE = 4
 
 
 def index(p):
@@ -72,26 +72,33 @@ def all_axioms():
     formulae = [[Prop("p0")]]
     axioms = []
 
+    def check_if_axiom(f):
+        if not any(specializes(f, a) for a in axioms):
+            if empty_theory.entails(f):
+                axioms.append(f)
+                print("%4d." % len(axioms), f)
+            else:
+                formulae[-1].append(f)
+
     for size in range(1, MAX_SIZE):
         formulae.append([])
         for part in range(size):
-            for lhs in formulae[part]:
+            for i in range(len(formulae[part])):
+                lhs = formulae[part][i]
                 lhs_degree = degree(lhs)
-                for rhs in formulae[size - part - 1]:
+                for j in range(len(formulae[size - part - 1])):
+                    rhs = formulae[size - part - 1][j]
                     rhs_degree = degree(rhs)
                     for perm in all_perms(rhs_degree, lhs_degree):
-                        f = Implies(lhs, apply_perm(rhs, perm))
+                        perm_rhs = apply_perm(rhs, perm)
 
-                        if not any(specializes(f, a) for a in axioms):
-                            if empty_theory.entails(f):
-                                axioms.append(f)
-                                print("%4d." % len(axioms), f)
-                            else:
-                                formulae[-1].append(f)
+                        check_if_axiom(Implies(lhs, perm_rhs))
 
-                if part == size - 1:
-                    f = Not(lhs)
-                    formulae[-1].append(f)
+                        if 2 * part < size - 1 or 2 * part == size - 1 and i <= j:
+                            check_if_axiom(Implies(Not(lhs), perm_rhs))
+
+                        if 2 * part > size - 1 or 2 * part == size - 1 and i >= j:
+                            check_if_axiom(Implies(lhs, Not(perm_rhs)))
 
 
 if __name__ == "__main__":
