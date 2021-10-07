@@ -102,6 +102,16 @@ class Point(ClosedInterval):
         super().__init__(point, point)
 
 
+class AtLeast(ClosedInterval):
+    def __init__(self, lower):
+        super().__init__(lower, 1)
+
+
+class AtMost(ClosedInterval):
+    def __init__(self, upper):
+        super().__init__(0, upper)
+
+
 class OpenInterval(FloatInterval):
     def configure(self, m, gap, formula, active):
         m.add_indicator(active, formula.val >= self.lower + gap)
@@ -122,6 +132,11 @@ class OpenLowerInterval(FloatInterval):
         m.add_indicator(active, formula.val >= self.upper + gap, 0)
 
 
+class GreaterThan(OpenLowerInterval):
+    def __init__(self, lower):
+        super().__init__(lower, 1)
+
+
 class OpenUpperInterval(FloatInterval):
     def configure(self, m, gap, formula, active):
         m.add_indicator(active, formula.val >= self.lower)
@@ -130,3 +145,8 @@ class OpenUpperInterval(FloatInterval):
     def compliment(self, m, gap, formula, active):
         m.add_indicator(active, formula.val <= self.lower - gap)
         m.add_indicator(active, formula.val >= self.upper, 0)
+
+
+class LessThan(OpenUpperInterval):
+    def __init__(self, upper):
+        super().__init__(0, upper)

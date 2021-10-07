@@ -32,7 +32,7 @@ class SatTestCase(unittest.TestCase):
         # The problem is likewise satisfiable in Lukasiewicz logic
         self.assertTrue(clock(full_theory.satisfiable, logic=Logic.LUKASIEWICZ))
 
-        exclusions = [SimpleSentence(a, [OpenUpperInterval(0, 1/k), OpenLowerInterval((k-1)/k, 1)]) for a in x]
+        exclusions = [SimpleSentence(a, [LessThan(1/k), GreaterThan((k-1)/k)]) for a in x]
         excluded_theory = Theory(s + exclusions)
 
         # The problem becomes unsatisfiable again if propositions are forced to lie near 0 and 1
@@ -166,11 +166,11 @@ class StressTestCase(unittest.TestCase):
 
         formula = Implies(Implies(phi, psi), Implies(Implies(Not(phi), psi), psi))
 
-        s = SimpleSentence(formula, [ClosedInterval(1/(k + 1), 1/k) for k in range(2,10000)] + [ClosedInterval(.5, 1)])
+        s = SimpleSentence(formula, [ClosedInterval(1/(k + 1), 1/k) for k in range(2, 10000)] + [AtLeast(.5)])
 
         boolean_theory = Theory(
-            SimpleSentence(phi, [0] + [ClosedInterval(1 - 1/k, 1 - 1/(k + 1)) for k in range(2,10000)]),
-            SimpleSentence(psi, [0] + [ClosedInterval(1 - 1/k, 1 - 1/(k + 1)) for k in range(2,10000)]),
+            SimpleSentence(phi, [0] + [ClosedInterval(1 - 1/k, 1 - 1/(k + 1)) for k in range(2, 10000)]),
+            SimpleSentence(psi, [0] + [ClosedInterval(1 - 1/k, 1 - 1/(k + 1)) for k in range(2, 10000)]),
         )
 
         self.assertTrue(boolean_theory.entails(s, logic=logic))
