@@ -46,24 +46,37 @@ def apply_perm(f, perm):
     return f
 
 
-def specializes(f, a, mapping=None):
-    if mapping is None:
-        mapping = [None] * degree(a)
+def neg(f):
+    return f.arg if isinstance(f, Not) else Not(f)
+
+
+def specializes(f, a, mappings=None):
+    if mappings is None:
+        mappings = [[None] * degree(a)]
+
+    ret_mappings = []
 
     if isinstance(a, Prop):
         i = index(a)
-        if mapping[i] is None:
-            mapping[i] = f
-            return True
-        return mapping[i] == f
+        for mapping in mappings:
+            if mapping[i] is None or mapping[i] == f:
+                ret_mappings.append(list(mapping))
+                ret_mappings[-1][i] = f
 
-    if isinstance(a, Operator):
-        return (type(a) is type(f) and
-                a.logic is f.logic and
-                len(a.operands) == len(f.operands) and
-                all(specializes(ff, aa, mapping) for aa, ff in zip(a.operands, f.operands)))
+    elif isinstance(a, Not):
+        ret_mappings += specializes(neg(f), a.arg, mappings)
 
-    return a == f
+    elif isinstance(a, Implies) and isinstance(f, Implies):
+        lhs_mappings = specializes(f.lhs, a.lhs, mappings)
+        ret_mappings += specializes(f.rhs, a.rhs, lhs_mappings)
+
+        rhs_mappings = specializes(neg(f.rhs), a.lhs, mappings)
+        ret_mappings += specializes(neg(f.lhs), a.rhs, rhs_mappings)
+
+    elif a == f:
+        ret_mappings += mappings
+
+    return ret_mappings
 
 
 def all_axioms():
