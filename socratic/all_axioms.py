@@ -46,15 +46,33 @@ def apply_perm(f, perm):
     return f
 
 
+class TruthReq(Enum):
+    AT_MOST = -1
+    EQUAL = 0
+    AT_LEAST = 1
+
+    @property
+    def neg(self):
+        return TruthReq(-self.value)
+
+
 def neg(f):
     return f.arg if isinstance(f, Not) else Not(f)
 
 
-def specializes(f, a, mappings=None):
+def specializes(f, a, req=TruthReq.EQUAL, mappings=None):
     if mappings is None:
         mappings = [[None] * degree(a)]
 
     ret_mappings = []
+
+    if req is TruthReq.AT_LEAST and isinstance(f, Implies):
+        ret_mappings += specializes(f.rhs, a, req, mappings)
+        ret_mappings += specializes(neg(f.lhs), a, req, mappings)
+
+    if req is TruthReq.AT_MOST and isinstance(f, Not) and isinstance(f.arg, Implies):
+        ret_mappings += specializes(f.arg.lhs, a, req, mappings)
+        ret_mappings += specializes(neg(f.arg.rhs), a, req, mappings)
 
     if isinstance(a, Prop):
         i = index(a)
@@ -64,14 +82,14 @@ def specializes(f, a, mappings=None):
                 ret_mappings[-1][i] = f
 
     elif isinstance(a, Not):
-        ret_mappings += specializes(neg(f), a.arg, mappings)
+        ret_mappings += specializes(neg(f), a.arg, req.neg, mappings)
 
     elif isinstance(a, Implies) and isinstance(f, Implies):
-        lhs_mappings = specializes(f.lhs, a.lhs, mappings)
-        ret_mappings += specializes(f.rhs, a.rhs, lhs_mappings)
+        lhs_mappings = specializes(f.lhs, a.lhs, req.neg, mappings)
+        ret_mappings += specializes(f.rhs, a.rhs, req, lhs_mappings)
 
-        rhs_mappings = specializes(neg(f.rhs), a.lhs, mappings)
-        ret_mappings += specializes(neg(f.lhs), a.rhs, rhs_mappings)
+        rhs_mappings = specializes(neg(f.rhs), a.lhs, req.neg, mappings)
+        ret_mappings += specializes(neg(f.lhs), a.rhs, req, rhs_mappings)
 
     elif a == f:
         ret_mappings += mappings
@@ -86,7 +104,7 @@ def all_axioms():
     axioms = []
 
     def check_if_axiom(f):
-        if not any(specializes(f, a) for a in axioms):
+        if not any(specializes(f, a, TruthReq.AT_LEAST) for a in axioms):
             if empty_theory.entails(f):
                 axioms.append(f)
                 print("%4d." % len(axioms), f)
