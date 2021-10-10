@@ -4,7 +4,7 @@ from socratic.clock import *
 from socratic.op import *
 from socratic.theory import *
 
-MAX_SIZE = 4
+MAX_SIZE = 5
 
 
 def index(p):
@@ -104,12 +104,16 @@ def all_axioms():
     axioms = []
 
     def check_if_axiom(f):
-        if not any(specializes(f, a, TruthReq.AT_LEAST) for a in axioms):
-            if empty_theory.entails(f):
-                axioms.append(f)
-                print("%4d." % len(axioms), f)
-            else:
-                formulae[-1].append(f)
+        for a in axioms:
+            if specializes(f, a, TruthReq.AT_LEAST):
+                print("      %-43s  specializes  %s" % (f, a))
+                return
+
+        if empty_theory.entails(f):
+            axioms.append(f)
+            print("%4d." % len(axioms), f)
+        else:
+            formulae[-1].append(f)
 
     for size in range(1, MAX_SIZE):
         formulae.append([])
