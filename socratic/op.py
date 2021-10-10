@@ -367,7 +367,8 @@ class Exponent(UnaryOperator):
         return f"{type(self).__name__}({repr(self.expo)}, {repr(self.arg)})"
 
     def __str__(self):
-        return str(self.arg) + self.symb + str(self.expo)
+        fmt = "(%s)%s%s" if isinstance(self.arg, UnaryOperator) else "%s%s%s"
+        return fmt % (self.arg, self.symb, self.expo)
 
     def add_constraints(self, m, gap, logic):
         self.add_constraint(m, self.val == m.max(0, 1 - self.expo * (1 - self.arg.val)))
