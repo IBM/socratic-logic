@@ -130,7 +130,8 @@ class Operator(Formula, ABC):
         return f"{type(self).__name__}({arg_repr})"
 
     def __str__(self):
-        return "(%s)" % f" {self.symb} ".join(map(str, self.operands))
+        fmt = f"({self.symb}%s)" if len(self.operands) <= 1 else "(%s)"
+        return fmt % f" {self.symb} ".join(map(str, self.operands))
 
     def reset(self):
         if super().reset():
