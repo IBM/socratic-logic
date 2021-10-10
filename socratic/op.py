@@ -145,13 +145,13 @@ class Operator(Formula, ABC):
 
             if self.logic is not None:
                 logic = self.logic
-            self.add_constraints(m, gap, logic)
+            self._add_constraints(m, gap, logic)
 
     @abstractmethod
-    def add_constraints(self, m, gap, logic):
+    def _add_constraints(self, m, gap, logic):
         pass
 
-    def add_constraint(self, m, constraint, name="constraint"):
+    def _add_constraint(self, m, constraint, name="constraint"):
         ct_name = f"{repr(self)}.{name}"
         if m.get_constraint_by_name(ct_name) is None:
             return m.add_constraint(constraint, ctname=ct_name)
@@ -161,12 +161,12 @@ class And(Operator):
     @property
     def symb(self): return '⊗'
 
-    def add_constraints(self, m, gap, logic):
+    def _add_constraints(self, m, gap, logic):
         if logic is Logic.GODEL:
-            self.add_constraint(m, self.val == m.min(op.val for op in self.operands))
+            self._add_constraint(m, self.val == m.min(op.val for op in self.operands))
 
         else:  # logic is Logic.LUKASIEWICZ
-            self.add_constraint(m, self.val == m.max(0, 1 - m.sum(1 - op.val for op in self.operands)))
+            self._add_constraint(m, self.val == m.max(0, 1 - m.sum(1 - op.val for op in self.operands)))
 
 
 class WeakAnd(And):
@@ -176,20 +176,20 @@ class WeakAnd(And):
     def __init__(self, *args):
         super().__init__(*args)
 
-    def add_constraints(self, m, gap, logic):
-        super().add_constraints(m, gap, Logic.GODEL)
+    def _add_constraints(self, m, gap, logic):
+        super()._add_constraints(m, gap, Logic.GODEL)
 
 
 class Or(Operator):
     @property
     def symb(self): return '⊕'
 
-    def add_constraints(self, m, gap, logic):
+    def _add_constraints(self, m, gap, logic):
         if logic is Logic.GODEL:
-            self.add_constraint(m, self.val == m.max(op.val for op in self.operands))
+            self._add_constraint(m, self.val == m.max(op.val for op in self.operands))
 
         else:  # logic is Logic.LUKASIEWICZ
-            self.add_constraint(m, self.val == m.min(1, m.sum(op.val for op in self.operands)))
+            self._add_constraint(m, self.val == m.min(1, m.sum(op.val for op in self.operands)))
 
 
 class WeakOr(Or):
@@ -199,8 +199,8 @@ class WeakOr(Or):
     def __init__(self, *args):
         super().__init__(*args)
 
-    def add_constraints(self, m, gap, logic):
-        super().add_constraints(m, gap, Logic.GODEL)
+    def _add_constraints(self, m, gap, logic):
+        super()._add_constraints(m, gap, Logic.GODEL)
 
 
 class BinaryOperator(Operator, ABC):
@@ -224,7 +224,7 @@ class Implies(BinaryOperator):
     @property
     def symb(self): return '→'
 
-    def add_constraints(self, m, gap, logic):
+    def _add_constraints(self, m, gap, logic):
         if logic is Logic.GODEL:
             var_name = repr(self) + ".lhs_le_rhs"
             if m.get_var_by_name(var_name) is None:
@@ -238,16 +238,16 @@ class Implies(BinaryOperator):
 
         else:  # logic is Logic.LUKASIEWICZ
             if isinstance(self.rhs.val, Number) and self.rhs.val == 0:
-                self.add_constraint(m, self.val == 1 - self.lhs.val)
+                self._add_constraint(m, self.val == 1 - self.lhs.val)
             else:
-                self.add_constraint(m, self.val == m.min(1, 1 - self.lhs.val + self.rhs.val))
+                self._add_constraint(m, self.val == m.min(1, 1 - self.lhs.val + self.rhs.val))
 
 
 class Equiv(BinaryOperator):
     @property
     def symb(self): return '↔'
 
-    def add_constraints(self, m, gap, logic):
+    def _add_constraints(self, m, gap, logic):
         if logic is Logic.GODEL:
             var_name = repr(self) + ".lhs_eq_rhs"
             if m.get_var_by_name(var_name) is None:
@@ -260,7 +260,7 @@ class Equiv(BinaryOperator):
                 m.add_indicator(lhs_eq_rhs, self.val == m.min(self.lhs.val, self.rhs.val), 0)
 
         else:  # logic is Logic.LUKASIEWICZ
-            self.add_constraint(m, self.val == 1 - m.abs(self.lhs.val - self.rhs.val))
+            self._add_constraint(m, self.val == 1 - m.abs(self.lhs.val - self.rhs.val))
 
 
 class UnaryOperator(Operator, ABC):
@@ -281,10 +281,10 @@ class Not(UnaryOperator):
     @property
     def symb(self): return '¬'
 
-    def add_constraints(self, m, gap, logic):
+    def _add_constraints(self, m, gap, logic):
         impl = Implies(self.arg, 0, logic=logic)
         impl.val = self.val
-        impl.add_constraints(m, gap, logic)
+        impl._add_constraints(m, gap, logic)
 
 
 class Inv(Not):
@@ -294,8 +294,8 @@ class Inv(Not):
     def __init__(self, arg):
         super().__init__(arg)
 
-    def add_constraints(self, m, gap, logic):
-        super().add_constraints(m, gap, Logic.LUKASIEWICZ)
+    def _add_constraints(self, m, gap, logic):
+        super()._add_constraints(m, gap, Logic.LUKASIEWICZ)
 
 
 class Delta(UnaryOperator):
@@ -305,7 +305,7 @@ class Delta(UnaryOperator):
     def __init__(self, arg):
         super().__init__(arg)
 
-    def add_constraints(self, m, gap, logic):
+    def _add_constraints(self, m, gap, logic):
         var_name = repr(self) + ".arg_eq_one"
         if m.get_var_by_name(var_name) is None:
             arg_eq_one = m.binary_var(name=var_name)
@@ -324,7 +324,7 @@ class Nabla(UnaryOperator):
     def __init__(self, arg):
         super().__init__(arg)
 
-    def add_constraints(self, m, gap, logic):
+    def _add_constraints(self, m, gap, logic):
         var_name = repr(self) + ".arg_eq_zero"
         if m.get_var_by_name(var_name) is None:
             arg_eq_zero = m.binary_var(name=var_name)
@@ -351,8 +351,8 @@ class Coefficient(UnaryOperator):
     def __str__(self):
         return str(self.coef) + self.symb + str(self.arg)
 
-    def add_constraints(self, m, gap, logic):
-        self.add_constraint(m, self.val == m.min(1, self.coef * self.arg.val))
+    def _add_constraints(self, m, gap, logic):
+        self._add_constraint(m, self.val == m.min(1, self.coef * self.arg.val))
 
 
 class Exponent(UnaryOperator):
@@ -371,5 +371,5 @@ class Exponent(UnaryOperator):
         fmt = "(%s)%s%s" if isinstance(self.arg, UnaryOperator) else "%s%s%s"
         return fmt % (self.arg, self.symb, self.expo)
 
-    def add_constraints(self, m, gap, logic):
-        self.add_constraint(m, self.val == m.max(0, 1 - self.expo * (1 - self.arg.val)))
+    def _add_constraints(self, m, gap, logic):
+        self._add_constraint(m, self.val == m.max(0, 1 - self.expo * (1 - self.arg.val)))
