@@ -51,7 +51,7 @@ class Prop(Formula):
         if isinstance(other, str):
             return self.name == other
 
-        return type(other) is Prop and self.name == other.name
+        return type(self) is type(other) and self.name == other.name
 
     def __hash__(self):
         return super().__hash__()
@@ -73,7 +73,7 @@ class Constant(Formula):
         if isinstance(other, Number):
             return self.val == other
 
-        return type(other) is Constant and self.val == other.val
+        return type(self) is type(other) and self.val == other.val
 
     def __hash__(self):
         return super().__hash__()
