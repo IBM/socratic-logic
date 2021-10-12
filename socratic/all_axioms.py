@@ -1,5 +1,3 @@
-from itertools import permutations, combinations
-
 from socratic.clock import *
 from socratic.op import *
 from socratic.theory import *
@@ -19,31 +17,6 @@ def degree(f):
         return max(map(degree, f.operands))
 
     return 0
-
-
-def all_perms(size, n_symb_so_far):
-    perm = [-1] * size
-    for k in range(min(size, n_symb_so_far) + 1):
-        for selection in permutations(range(n_symb_so_far), k):
-            for merger in combinations(range(size), size - k):
-                prev = 0
-                for i in range(size - k):
-                    curr = merger[i]
-                    perm[prev:curr] = selection[(prev - i):(curr - i)]
-                    perm[curr] = n_symb_so_far + i
-                    prev = curr + 1
-                perm[prev:] = selection[(prev - size + k):]
-                yield perm
-
-
-def apply_perm(f, perm):
-    if isinstance(f, Prop):
-        return Prop(f"p{perm[index(f)]}")
-
-    if isinstance(f, Operator):
-        return type(f)(*(apply_perm(op, perm) for op in f.operands))
-
-    return f
 
 
 class TruthReq(Enum):
@@ -97,10 +70,34 @@ def specializes(f, a, req=TruthReq.EQUAL, mappings=None):
     return ret_mappings
 
 
+def all_formulae(size, n_symb_so_far=0):
+    if size == 0:
+        yield Prop(f'p{n_symb_so_far}'), n_symb_so_far + 1
+        for idx in range(n_symb_so_far - 1, -1, -1):
+            yield Prop(f'p{idx}'), n_symb_so_far
+
+    for part in range(size):
+        for lhs, lhs_degree in all_formulae(part, n_symb_so_far):
+            for rhs, rhs_degree in all_formulae(size - part - 1, lhs_degree):
+                if lhs != rhs:
+                    yield Implies(lhs, rhs), rhs_degree
+
+                    # if not isinstance(lhs, Prop) or lhs_degree == n_symb_so_far:
+                    #     if not isinstance(rhs, Prop) or rhs_degree == lhs_degree:
+                    #         yield Implies(Not(lhs), Not(rhs)), rhs_degree
+
+                if 2 * part <= size - 1:
+                    if not isinstance(rhs, Prop) or rhs_degree == lhs_degree:
+                        yield Implies(lhs, Not(rhs)), rhs_degree
+
+                if 2 * part >= size - 1:
+                    if not isinstance(lhs, Prop) or lhs_degree == n_symb_so_far:
+                        yield Implies(Not(lhs), rhs), rhs_degree
+
+
 def all_axioms():
     empty_theory = Theory()
 
-    formulae = [[Prop("p0")]]
     axioms = []
 
     def check_if_axiom(f):
@@ -112,28 +109,12 @@ def all_axioms():
         if empty_theory.entails(f):
             axioms.append(f)
             print("%4d." % len(axioms), f)
-        else:
-            formulae[-1].append(f)
+
+    check_if_axiom(Implies('p0', 'p0'))
 
     for size in range(1, MAX_SIZE):
-        formulae.append([])
-        for part in range(size):
-            for i in range(len(formulae[part])):
-                lhs = formulae[part][i]
-                lhs_degree = degree(lhs)
-                for j in range(len(formulae[size - part - 1])):
-                    rhs = formulae[size - part - 1][j]
-                    rhs_degree = degree(rhs)
-                    for perm in all_perms(rhs_degree, lhs_degree):
-                        perm_rhs = apply_perm(rhs, perm)
-
-                        check_if_axiom(Implies(lhs, perm_rhs))
-
-                        if 2 * part < size - 1 or 2 * part == size - 1 and i <= j:
-                            check_if_axiom(Implies(Not(lhs), perm_rhs))
-
-                        if 2 * part > size - 1 or 2 * part == size - 1 and i >= j:
-                            check_if_axiom(Implies(lhs, Not(perm_rhs)))
+        for formula, _ in all_formulae(size):
+            check_if_axiom(formula)
 
 
 if __name__ == "__main__":
