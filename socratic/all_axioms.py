@@ -70,15 +70,21 @@ def specializes(f, a, req=TruthReq.EQUAL, mappings=None):
     return ret_mappings
 
 
-def all_formulae(size, n_symb_so_far=0):
+def all_formulae(size, axioms, n_symb_so_far=0):
     if size == 0:
         yield Prop(f'p{n_symb_so_far}'), n_symb_so_far + 1
         for idx in range(n_symb_so_far - 1, -1, -1):
             yield Prop(f'p{idx}'), n_symb_so_far
 
     for part in range(size):
-        for lhs, lhs_degree in all_formulae(part, n_symb_so_far):
-            for rhs, rhs_degree in all_formulae(size - part - 1, lhs_degree):
+        for lhs, lhs_degree in all_formulae(part, axioms, n_symb_so_far):
+            if any(specializes(lhs, a, TruthReq.AT_LEAST) for a in axioms):
+                continue
+
+            for rhs, rhs_degree in all_formulae(size - part - 1, axioms, lhs_degree):
+                if any(specializes(rhs, a, TruthReq.AT_LEAST) for a in axioms):
+                    continue
+
                 if lhs != rhs:
                     yield Implies(lhs, rhs), rhs_degree
 
@@ -113,7 +119,7 @@ def all_axioms():
     check_if_axiom(Implies('p0', 'p0'))
 
     for size in range(1, MAX_SIZE):
-        for formula, _ in all_formulae(size):
+        for formula, _ in all_formulae(size, axioms):
             check_if_axiom(formula)
 
 
