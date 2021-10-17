@@ -3,6 +3,7 @@ from socratic.op import *
 from socratic.theory import *
 
 MAX_SIZE = 5
+MAX_PROPS = 3
 
 
 def index(p):
@@ -72,7 +73,8 @@ def specializes(f, a, req=TruthReq.EQUAL, mappings=None):
 
 def all_formulae(size, axioms, n_symb_so_far=0):
     if size == 0:
-        yield Prop(f'p{n_symb_so_far}'), n_symb_so_far + 1
+        if n_symb_so_far < MAX_PROPS:
+            yield Prop(f'p{n_symb_so_far}'), n_symb_so_far + 1
         for idx in range(n_symb_so_far - 1, -1, -1):
             yield Prop(f'p{idx}'), n_symb_so_far
 
