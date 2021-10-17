@@ -56,10 +56,10 @@ class Prop(Formula):
     def __hash__(self):
         return super().__hash__()
 
-    def __repr__(self, depth=0):
+    def __repr__(self, _depth=0):
         return f"{type(self).__name__}({repr(self.name)})"
 
-    def __str__(self, depth=0):
+    def __str__(self, _depth=0):
         return str(self.name)
 
 
@@ -78,10 +78,10 @@ class Const(Formula):
     def __hash__(self):
         return super().__hash__()
 
-    def __repr__(self, depth=0):
+    def __repr__(self, _depth=0):
         return f"{type(self).__name__}({repr(self.val)})"
 
-    def __str__(self, depth=0):
+    def __str__(self, _depth=0):
         return str(self.val)
 
     def reset(self):
@@ -124,27 +124,27 @@ class Operator(Formula, ABC):
     def __hash__(self):
         return super().__hash__()
 
-    def __repr__(self, depth=0):
+    def __repr__(self, _depth=0):
         def fn(d):
             logic_arg = [f"logic={self.logic}"] if self.logic is not None else []
             arg_repr = ", ".join([op.__repr__(d) for op in self.operands] + logic_arg)
             return f"{type(self).__name__}({arg_repr})"
-        return self._annotate_recurrence(fn, depth)
+        return self._annotate_recurrence(fn, _depth)
 
-    def __str__(self, depth=0):
+    def __str__(self, _depth=0):
         def fn(d):
             fmt = f"({self.symb}%s)" if len(self.operands) <= 1 else "(%s)"
             return fmt % f" {self.symb} ".join(op.__str__(d) for op in self.operands)
-        return self._annotate_recurrence(fn, depth)
+        return self._annotate_recurrence(fn, _depth)
 
     def _annotate_recurrence(self, fn, depth):
-        if hasattr(self, "depth"):
-            return '.' * (depth - self.depth + 1)
-        self.depth = depth
+        if hasattr(self, "_depth"):
+            return '.' * (depth - self._depth + 1)
+        self._depth = depth
         try:
             return fn(depth + 1)
         finally:
-            del self.depth
+            del self._depth
 
     def reset(self):
         if super().reset():
@@ -286,10 +286,10 @@ class UnaryOperator(Operator, ABC):
     @arg.setter
     def arg(self, value): self.operands[0] = value
 
-    def __str__(self, depth=0):
+    def __str__(self, _depth=0):
         return self._annotate_recurrence(
             lambda d: self.symb + self.arg.__str__(d),
-            depth)
+            _depth)
 
 
 class Not(UnaryOperator):
@@ -360,15 +360,15 @@ class Coef(UnaryOperator):
 
         self.coef = coef
 
-    def __repr__(self, depth=0):
+    def __repr__(self, _depth=0):
         return self._annotate_recurrence(
             lambda d: f"{type(self).__name__}({repr(self.coef)}, {self.arg.__repr__(d)})",
-            depth)
+            _depth)
 
-    def __str__(self, depth=0):
+    def __str__(self, _depth=0):
         return self._annotate_recurrence(
             lambda d: str(self.coef) + self.symb + self.arg.__str__(d),
-            depth)
+            _depth)
 
     def _add_constraints(self, m, gap, logic):
         self._add_constraint(m, self.val == m.min(1, self.coef * self.arg.val))
@@ -383,16 +383,16 @@ class Exp(UnaryOperator):
 
         self.exp = exp
 
-    def __repr__(self, depth=0):
+    def __repr__(self, _depth=0):
         return self._annotate_recurrence(
             lambda d: f"{type(self).__name__}({repr(self.exp)}, {self.arg.__repr__(d)})",
-            depth)
+            _depth)
 
-    def __str__(self, depth=0):
+    def __str__(self, _depth=0):
         def fn(d):
             fmt = "(%s)%s%s" if isinstance(self.arg, UnaryOperator) else "%s%s%s"
             return fmt % (self.arg.__str__(d), self.symb, self.exp)
-        return self._annotate_recurrence(fn, depth)
+        return self._annotate_recurrence(fn, _depth)
 
     def _add_constraints(self, m, gap, logic):
         self._add_constraint(m, self.val == m.max(0, 1 - self.exp * (1 - self.arg.val)))
