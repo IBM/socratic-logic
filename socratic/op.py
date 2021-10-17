@@ -14,15 +14,15 @@ class Formula(ABC):
         self.val = float("nan")
 
     def __rmul__(self, other):
-        return Coefficient(other, self)
+        return Coef(other, self)
 
     __mul__ = __rmul__
 
     def __truediv__(self, other):
-        return Coefficient(1 / other, self)
+        return Coef(1 / other, self)
 
     def __pow__(self, other):
-        return Exponent(other, self)
+        return Exp(other, self)
 
     def reset(self):
         if self.val is not None:
@@ -63,7 +63,7 @@ class Prop(Formula):
         return str(self.name)
 
 
-class Constant(Formula):
+class Const(Formula):
     def __init__(self, val):
         super().__init__()
 
@@ -110,7 +110,7 @@ class Operator(Formula, ABC):
                 return Prop(arg)
 
             if isinstance(arg, Number):
-                return Constant(arg)
+                return Const(arg)
 
             return arg
 
@@ -351,7 +351,7 @@ class Nabla(UnaryOperator):
             m.add_indicator(arg_eq_zero, self.val == 1, 0)
 
 
-class Coefficient(UnaryOperator):
+class Coef(UnaryOperator):
     @property
     def symb(self): return '⋅'
 
@@ -374,25 +374,25 @@ class Coefficient(UnaryOperator):
         self._add_constraint(m, self.val == m.min(1, self.coef * self.arg.val))
 
 
-class Exponent(UnaryOperator):
+class Exp(UnaryOperator):
     @property
     def symb(self): return '^'
 
-    def __init__(self, expo, arg):
+    def __init__(self, exp, arg):
         super().__init__(arg)
 
-        self.expo = expo
+        self.exp = exp
 
     def __repr__(self, depth=0):
         return self._annotate_recurrence(
-            lambda d: f"{type(self).__name__}({repr(self.expo)}, {self.arg.__repr__(d)})",
+            lambda d: f"{type(self).__name__}({repr(self.exp)}, {self.arg.__repr__(d)})",
             depth)
 
     def __str__(self, depth=0):
         def fn(d):
             fmt = "(%s)%s%s" if isinstance(self.arg, UnaryOperator) else "%s%s%s"
-            return fmt % (self.arg.__str__(d), self.symb, self.expo)
+            return fmt % (self.arg.__str__(d), self.symb, self.exp)
         return self._annotate_recurrence(fn, depth)
 
     def _add_constraints(self, m, gap, logic):
-        self._add_constraint(m, self.val == m.max(0, 1 - self.expo * (1 - self.arg.val)))
+        self._add_constraint(m, self.val == m.max(0, 1 - self.exp * (1 - self.arg.val)))
