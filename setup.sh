@@ -1,4 +1,5 @@
-#!/usr/bin/env bash -e
+#!/usr/bin/env bash
+set -e
 
 # This script creates a Python virtual environment, installs required packages
 # available from pip, and further installs the Python cplex package from an
@@ -31,22 +32,22 @@ fi
 pip install -r requirements.txt
 
 
-CPLEX_ROOT=CPLEX_Studio*/
-CPLEX_PATH=cplex/python/$PYTHON_VERSION/
+CPLEX_ROOT=CPLEX_Studio
+CPLEX_PATH=cplex/python/$PYTHON_VERSION
 
 # Check for a CPLEX installation in the working directory
 # TODO: Also check platform-specific standard installer locations
-root_matches=($(compgen -G "$CPLEX_ROOT" || true))
+root_matches=("$CPLEX_ROOT"*)
 if (( ${#root_matches[*]} != 1 )); then
     # If not found (or not unique), prompt for installation location
-    read -e -p "Path to IBM ILOG CPLEX Optimization Studio ($CPLEX_ROOT): " root_matches
+    read -erp "Path to IBM ILOG CPLEX Optimization Studio ($CPLEX_ROOT*): " root_matches
 fi
 
 pushd "$root_matches/$CPLEX_PATH" >/dev/null
 
 # Check for available system architecture installers
 # TODO: Automatically select the appropriate installer if possible
-arch_matches=($(compgen -G "*/" || true))
+arch_matches=(*)
 if (( ${#arch_matches[*]} == 0 )); then
     echo "No installers found; check CPLEX installation"
     exit 1
@@ -54,7 +55,7 @@ elif (( ${#arch_matches[*]} > 1 )); then
     # If not unique, prompt for which to use
     echo "Multiple architecture installers detected:"
     printf '  %s\n' "${arch_matches[@]}"
-    read -e -p "Please select one of the above: " arch_matches
+    read -erp "Please select one of the above: " arch_matches
 fi
 cd "$arch_matches"
 
