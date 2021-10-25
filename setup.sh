@@ -8,13 +8,6 @@ set -e
 
 PYTHON_VERSION=$(python3 -V | grep -o '[0-9]\+\.[0-9]\+')
 
-# Optimization Studio 12.10 (the latest version as of this writing) supports
-# only Python 3.6 and 3.7 and SoCRAtic Logic itself requires Python 3.
-if [[ $PYTHON_VERSION != 3.[67] ]]; then
-    echo "SoCRAtic Logic requires Python 3.6 or 3.7"
-    exit 1
-fi
-
 # Create the Python virtual environment if not already present
 if [[ ! -d venv ]]; then
     # Attempt to install virtualenv (globally) if not found
@@ -48,10 +41,7 @@ pushd "$root_matches/$CPLEX_PATH" >/dev/null
 # Check for available system architecture installers
 # TODO: Automatically select the appropriate installer if possible
 arch_matches=(*)
-if (( ${#arch_matches[*]} == 0 )); then
-    echo "No installers found; check CPLEX installation"
-    exit 1
-elif (( ${#arch_matches[*]} > 1 )); then
+if (( ${#arch_matches[*]} > 1 )); then
     # If not unique, prompt for which to use
     echo "Multiple architecture installers detected:"
     printf '  %s\n' "${arch_matches[@]}"
