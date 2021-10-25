@@ -1,1 +1,1 @@
-docplex~=2.14.186
+docplex~=2.14
