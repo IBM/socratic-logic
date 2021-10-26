@@ -17,6 +17,16 @@ CPLEX_DEFAULT_INSTALL_PATHS=(
 # Glob matching versioned CPLEX application directory
 CPLEX_GLOB="CPLEX_Studio*"
 
+# Path to Python utilities within CPLEX application directory
+CPLEX_PYTHON_PATH="cplex/python"
+
+# Helper to test if Python satisfies minimum version requirements
+# Usage: check_python PYTHON VERSION [MINOR_VERSION...]
+check_python() {
+  local python="$1"; shift; local IFS=. v; v=$(tr -s . , <<< "$*.")
+  "$python" -c "import sys; exit(not sys.version_info[:3] >= ($v))"
+}
+
 
 # Check for CPLEX in pwd and default installation directories
 cplex_root=()
@@ -37,24 +47,47 @@ else
 fi
 
 
+# Just go with the virtual environment if already present
+if [[ ! -d venv ]]; then
+  pushd "$cplex_root/$CPLEX_PYTHON_PATH" >/dev/null
+
+  # Check for versions of Python supported by CPLEX (and SoCRAtic)
+  cplex_python_v=(*)  # Glob
+  python3=()
+  for v in "${cplex_python_v[@]}"; do
+    if type -P "python$v" >/dev/null && check_python "python$v" 3.6; then
+      python3+=("python$v")
+    fi
+  done
+
+  popd >/dev/null
+
+  if [[ ${#python3[*]} -eq 1 ]]; then
+    echo "Using ${python3[0]}"
+  else
+    echo "Versions of Python supported by $(basename "$cplex_root"):"
+    printf '  %s\n' "${cplex_python_v[@]}"
+    read -erp "Command for Python >= 3.6 (python3*): " python3
+  fi
+fi
+
+
 # Create the Python virtual environment if not already present
 if [[ ! -d venv ]]; then
-    # Attempt to install the virtualenv package (globally) if not found
-    if ! python3 -m pip freeze | grep -q "^virtualenv=="; then
-        python3 -m pip install virtualenv
-    fi
+  # Attempt to install the virtualenv package (globally) if not found
+  if ! "$python3" -m pip freeze | grep -q "^virtualenv=="; then
+    "$python3" -m pip install virtualenv
+  fi
 
-    python3 -m virtualenv venv
+  "$python3" -m virtualenv venv
 fi
 
 source venv/bin/activate
 pip install -r requirements.txt
 
 
-PYTHON_VERSION=$(python3 -V | grep -o '[0-9]\+\.[0-9]\+')
-CPLEX_PATH=cplex/python/$PYTHON_VERSION
-
-pushd "$cplex_root/$CPLEX_PATH" >/dev/null
+python_v="$(python3 -V | grep -o '[0-9]\+\.[0-9]\+')"
+pushd "$cplex_root/$CPLEX_PYTHON_PATH/$python_v" >/dev/null
 
 # Check for available system architecture installers
 cplex_arch=(*)  # Glob
