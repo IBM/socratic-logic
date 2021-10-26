@@ -6,13 +6,34 @@ set -e
 # existing IBM ILOG CPLEX Optimization Studio installation.
 
 
-CPLEX_ROOT=CPLEX_Studio
+# Default installation paths for all supported platforms
+CPLEX_DEFAULT_INSTALL_PATHS=(
+  "/mnt/c/Program Files/IBM/ILOG"  # Windows
+  "/opt/IBM/ILOG"                  # UNIX
+  "/opt/ibm/ILOG"                  # Linux
+  "/Applications"                  # macOS
+)
 
-# Check for a CPLEX installation in the working directory
-# TODO: Also check platform-specific standard installer locations
-root_matches=("$CPLEX_ROOT"*)  # Glob
-if (( ${#root_matches[*]} != 1 )); then
-    read -erp "Path to IBM ILOG CPLEX Optimization Studio ($CPLEX_ROOT*): " root_matches
+# Glob matching versioned CPLEX application directory
+CPLEX_GLOB="CPLEX_Studio*"
+
+
+# Check for CPLEX in pwd and default installation directories
+cplex_root=()
+for path in . "${CPLEX_DEFAULT_INSTALL_PATHS[@]}"; do
+  [[ -d "$path" ]] && while IFS= read -rd $'\0'; do
+    cplex_root+=("$REPLY")
+  done < <(find "$path" -maxdepth 1 -name "$CPLEX_GLOB" -print0)
+done
+
+if (( ${#cplex_root[*]} == 1 )); then
+  echo "Using ${cplex_root[0]}"
+else
+  if (( ${#cplex_root[*]} > 1 )); then
+    echo "Multiple CPLEX installations detected:"
+    printf '  %s\n' "${cplex_root[@]}"
+  fi
+  read -erp "Path to IBM ILOG CPLEX Optimization Studio ($CPLEX_GLOB): " cplex_root
 fi
 
 
@@ -33,16 +54,16 @@ pip install -r requirements.txt
 PYTHON_VERSION=$(python3 -V | grep -o '[0-9]\+\.[0-9]\+')
 CPLEX_PATH=cplex/python/$PYTHON_VERSION
 
-pushd "$root_matches/$CPLEX_PATH" >/dev/null
+pushd "$cplex_root/$CPLEX_PATH" >/dev/null
 
 # Check for available system architecture installers
-arch_matches=(*)  # Glob
-if (( ${#arch_matches[*]} > 1 )); then
-    echo "Multiple architecture installers detected:"
-    printf '  %s\n' "${arch_matches[@]}"
-    read -erp "Please select one of the above: " arch_matches
+cplex_arch=(*)  # Glob
+if (( ${#cplex_arch[*]} > 1 )); then
+  echo "Multiple architecture installers detected:"
+  printf '  %s\n' "${cplex_arch[@]}"
+  read -erp "Please select one of the above: " cplex_arch
 fi
 
-cd "$arch_matches"
+cd "$cplex_arch"
 python3 setup.py install
 popd >/dev/null
