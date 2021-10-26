@@ -6,6 +6,10 @@ set -e
 # existing IBM ILOG CPLEX Optimization Studio installation.
 
 
+#
+# CONSTANTS AND HELPER FUNCTIONS
+#
+
 # Default installation paths for all supported platforms
 CPLEX_DEFAULT_INSTALL_PATHS=(
   "/mnt/c/Program Files/IBM/ILOG"  # Windows
@@ -28,6 +32,10 @@ check_python() {
 }
 
 
+#
+# SELECT CPLEX INSTALLATION
+#
+
 # Check for CPLEX in pwd and default installation directories
 cplex_root=()
 for path in . "${CPLEX_DEFAULT_INSTALL_PATHS[@]}"; do
@@ -46,6 +54,10 @@ else
   read -erp "Path to IBM ILOG CPLEX Optimization Studio ($CPLEX_GLOB): " cplex_root
 fi
 
+
+#
+# SELECT PYTHON BINARY
+#
 
 # Just go with the virtual environment if already present
 if [[ ! -d venv ]]; then
@@ -72,6 +84,10 @@ if [[ ! -d venv ]]; then
 fi
 
 
+#
+# VIRTUAL ENVIRONMENT
+#
+
 # Create the Python virtual environment if not already present
 if [[ ! -d venv ]]; then
   # Attempt to install the virtualenv package (globally) if not found
@@ -85,6 +101,10 @@ fi
 source venv/bin/activate
 pip install -r requirements.txt
 
+
+#
+# CPLEX API
+#
 
 python_v="$(python3 -V | grep -o '[0-9]\+\.[0-9]\+')"
 pushd "$cplex_root/$CPLEX_PYTHON_PATH/$python_v" >/dev/null
