@@ -14,22 +14,22 @@ class FloatInterval(ABC):
         self.upper = upper
 
     @abstractmethod
-    def configure(self, m, gap, formula, active):
+    def configure(self, m, gap, val, active):
         pass
 
     @abstractmethod
-    def compliment(self, m, gap, formula, active):
+    def compliment(self, m, gap, val, active):
         pass
 
 
 class ClosedInterval(FloatInterval):
-    def configure(self, m, gap, formula, active):
-        m.add_indicator(active, formula.val >= self.lower)
-        m.add_indicator(active, formula.val <= self.upper)
+    def configure(self, m, gap, val, active):
+        m.add_indicator(active, val >= self.lower)
+        m.add_indicator(active, val <= self.upper)
 
-    def compliment(self, m, gap, formula, active):
-        m.add_indicator(active, formula.val <= self.lower - gap)
-        m.add_indicator(active, formula.val >= self.upper + gap, 0)
+    def compliment(self, m, gap, val, active):
+        m.add_indicator(active, val <= self.lower - gap)
+        m.add_indicator(active, val >= self.upper + gap, 0)
 
 
 class Point(ClosedInterval):
@@ -48,23 +48,23 @@ class AtMost(ClosedInterval):
 
 
 class OpenInterval(FloatInterval):
-    def configure(self, m, gap, formula, active):
-        m.add_indicator(active, formula.val >= self.lower + gap)
-        m.add_indicator(active, formula.val <= self.upper - gap)
+    def configure(self, m, gap, val, active):
+        m.add_indicator(active, val >= self.lower + gap)
+        m.add_indicator(active, val <= self.upper - gap)
 
-    def compliment(self, m, gap, formula, active):
-        m.add_indicator(active, formula.val <= self.lower)
-        m.add_indicator(active, formula.val >= self.upper, 0)
+    def compliment(self, m, gap, val, active):
+        m.add_indicator(active, val <= self.lower)
+        m.add_indicator(active, val >= self.upper, 0)
 
 
 class OpenLowerInterval(FloatInterval):
-    def configure(self, m, gap, formula, active):
-        m.add_indicator(active, formula.val >= self.lower + gap)
-        m.add_indicator(active, formula.val <= self.upper)
+    def configure(self, m, gap, val, active):
+        m.add_indicator(active, val >= self.lower + gap)
+        m.add_indicator(active, val <= self.upper)
 
-    def compliment(self, m, gap, formula, active):
-        m.add_indicator(active, formula.val <= self.lower)
-        m.add_indicator(active, formula.val >= self.upper + gap, 0)
+    def compliment(self, m, gap, val, active):
+        m.add_indicator(active, val <= self.lower)
+        m.add_indicator(active, val >= self.upper + gap, 0)
 
 
 class GreaterThan(OpenLowerInterval):
@@ -73,13 +73,13 @@ class GreaterThan(OpenLowerInterval):
 
 
 class OpenUpperInterval(FloatInterval):
-    def configure(self, m, gap, formula, active):
-        m.add_indicator(active, formula.val >= self.lower)
-        m.add_indicator(active, formula.val <= self.upper - gap)
+    def configure(self, m, gap, val, active):
+        m.add_indicator(active, val >= self.lower)
+        m.add_indicator(active, val <= self.upper - gap)
 
-    def compliment(self, m, gap, formula, active):
-        m.add_indicator(active, formula.val <= self.lower - gap)
-        m.add_indicator(active, formula.val >= self.upper, 0)
+    def compliment(self, m, gap, val, active):
+        m.add_indicator(active, val <= self.lower - gap)
+        m.add_indicator(active, val >= self.upper, 0)
 
 
 class LessThan(OpenUpperInterval):
@@ -108,14 +108,14 @@ class SimpleSentence(Sentence):
         active_interval = m.binary_var_list(len(self.intervals), name=repr(self.formula) + ".active_interval")
         m.add_constraint(m.sum(active_interval) == 1)
         for i in range(len(self.intervals)):
-            self.intervals[i].configure(m, gap, self.formula, active_interval[i])
+            self.intervals[i].configure(m, gap, self.formula.val, active_interval[i])
 
     def compliment(self, m, gap, logic):
         self.formula.configure(m, gap, logic)
 
         active_interval = m.binary_var_list(len(self.intervals), name=repr(self.formula) + ".active_interval")
         for i in range(len(self.intervals)):
-            self.intervals[i].compliment(m, gap, self.formula, active_interval[i])
+            self.intervals[i].compliment(m, gap, self.formula.val, active_interval[i])
 
 
 class Theory(object):
