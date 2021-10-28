@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
 from numbers import Number
-from typing import Union
+from typing import Iterable, Optional, Union
 
 from docplex.mp.dvar import Var
 from docplex.mp.model import Model
@@ -196,16 +195,34 @@ class SimpleSentence(Sentence):
 
 
 class Theory(object):
-    def __init__(self, *args):
+    def __init__(self, *args: Union[SimpleSentence, Formula]):
+        """A collection of sentences for testing mutual satisfiability and/or entailment.
+
+        :param args: The theory's sentences.  Formulae provided in lieu of Sentences are coerced into SimpleSentences
+            with truth value exactly 1.
+        """
         self.sentences = [SimpleSentence(s, 1) if isinstance(s, Formula) else s for s in args]
 
         self.m = None
         self.gap = None
 
     def satisfiable(self, logic=Logic.LUKASIEWICZ):
+        """Test whether a theory's sentences may all be true simultaneously.
+
+        :param logic: The t-norm used to define the sentences' connectives.
+        :return: True iff the theory is satisfiable.  Also, upon completion, Theory attributes m and gap and all
+            variables and constraints created for intervals and formulae remain available for inspection.
+        """
         return not self.entails(None, logic)
 
-    def entails(self, query, logic=Logic.LUKASIEWICZ):
+    def entails(self, query: Optional[Union[SimpleSentence, Formula]], logic=Logic.LUKASIEWICZ):
+        """Test whether a query sentence must be true whenever a theory's sentences are all true.
+
+        :param query: The sentence to be tested or None if testing satisfiability.
+        :param logic: The t-norm used to define the sentences' connectives.
+        :return: True iff the theory entails the query.  Also, upon completion, Theory attributes m and gap and all
+            variables and constraints created for intervals and formulae remain available for inspection.
+        """
         if isinstance(query, Formula):
             query = SimpleSentence(query, 1)
 
