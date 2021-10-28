@@ -150,6 +150,9 @@ class SimpleSentence(Sentence):
     def __init__(self, formula: Formula, intervals: Union[Iterable[TruthType], TruthType]):
         """A sentence made up of one formula and a union of intervals of possible truth values.
 
+        Example usage:
+            SimpleSentence(Prop('a'), [0, GreaterThan(.5)])
+
         :param formula: A logical expression.
         :param intervals: A collection of intervals representing the formula's set of possible truth values.  Numbers
             provided in lieu of FloatIntervals are coerced into Points.  In addition, one may provide an individual
@@ -209,6 +212,9 @@ class Theory(object):
     def satisfiable(self, logic=Logic.LUKASIEWICZ):
         """Test whether a theory's sentences may all be true simultaneously.
 
+        Example usage:
+            Theory(Or('a', 'a'), Or(Not('a'), Not('a')).satisfiable()
+
         :param logic: The t-norm used to define the sentences' connectives.
         :return: True iff the theory is satisfiable.  Also, upon completion, Theory attributes m and gap and all
             variables and constraints created for intervals and formulae remain available for inspection.
@@ -217,6 +223,11 @@ class Theory(object):
 
     def entails(self, query: Optional[Union[SimpleSentence, Formula]], logic=Logic.LUKASIEWICZ):
         """Test whether a query sentence must be true whenever a theory's sentences are all true.
+
+        Example usage:
+            Theory().entails(
+                SimpleSentence(Or('a', Inv('a')), AtLeast(.5)), logic=Logic.GODEL
+            )
 
         :param query: The sentence to be tested or None if testing satisfiability.
         :param logic: The t-norm used to define the sentences' connectives.
