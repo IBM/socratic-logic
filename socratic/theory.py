@@ -2,27 +2,49 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from numbers import Number
 
-import docplex.mp as mp
-import docplex.mp.model
+from docplex.mp.dvar import Var
+from docplex.mp.model import Model
 
 from socratic.op import Logic, Formula
 
 
 class FloatInterval(ABC):
-    def __init__(self, lower, upper):
+    def __init__(self, lower: float, upper: float):
+        """A base class for closed and open intervals defined by their lower and upper bounds.
+
+        :param lower: The interval's minimum or infimum value if open.
+        :param upper: The interval's maximum or supremum value if open.
+        """
         self.lower = lower
         self.upper = upper
 
     @abstractmethod
-    def configure(self, m, gap, val, active):
+    def configure(self, m: Model, gap: Var, val: Var, active: Var):
+        """Add constraints to a model requiring a value to lie within the represented interval (if active).
+
+        :param m: An MP model containing gap, val, and active to which constraints will be added.
+        :param gap: The model's gap variable, used to enforce strict inequality.
+        :param val: The continuous variable to be constrained within the interval.
+        :param active: A boolean variable indicating whether added constraints are active.
+        """
         pass
 
     @abstractmethod
-    def compliment(self, m, gap, val, active):
+    def compliment(self, m: Model, gap: Var, val: Var, active: Var):
+        """Add constraints to a model requiring a value to lie outside the represented interval.
+
+        :param m: An MP model containing gap, val, and active to which constraints will be added.
+        :param gap: The model's gap variable, used to enforce strict inequality.
+        :param val: The continuous variable to be constrained outside the interval.
+        :param active: A boolean variable indicating which side of the interval val lies beyond.
+        """
         pass
 
 
 class ClosedInterval(FloatInterval):
+    """An interval that includes both its lower and upper bound values.
+    """
+
     def configure(self, m, gap, val, active):
         m.add_indicator(active, val >= self.lower)
         m.add_indicator(active, val <= self.upper)
@@ -34,20 +56,35 @@ class ClosedInterval(FloatInterval):
 
 class Point(ClosedInterval):
     def __init__(self, point):
+        """A point interval with equal lower and upper bound.
+
+        :param point: The singular value within the interval.
+        """
         super().__init__(point, point)
 
 
 class AtLeast(ClosedInterval):
     def __init__(self, lower):
+        """An interval containing all points greater than or equal to its lower bound.
+
+        :param lower: The interval's min value.
+        """
         super().__init__(lower, 1)
 
 
 class AtMost(ClosedInterval):
     def __init__(self, upper):
+        """An interval containing all points less than or equal to its upper bound.
+
+        :param upper: The interval's max value.
+        """
         super().__init__(0, upper)
 
 
 class OpenInterval(FloatInterval):
+    """An interval that excludes both its lower and upper bound values.
+    """
+
     def configure(self, m, gap, val, active):
         m.add_indicator(active, val >= self.lower + gap)
         m.add_indicator(active, val <= self.upper - gap)
@@ -58,6 +95,9 @@ class OpenInterval(FloatInterval):
 
 
 class OpenLowerInterval(FloatInterval):
+    """An interval that excludes its lower bound value but includes its upper bound value.
+    """
+
     def configure(self, m, gap, val, active):
         m.add_indicator(active, val >= self.lower + gap)
         m.add_indicator(active, val <= self.upper)
@@ -69,10 +109,17 @@ class OpenLowerInterval(FloatInterval):
 
 class GreaterThan(OpenLowerInterval):
     def __init__(self, lower):
+        """An interval containing all points strictly greater than its lower bound.
+
+        :param lower: The interval's infimum.
+        """
         super().__init__(lower, 1)
 
 
 class OpenUpperInterval(FloatInterval):
+    """An interval that includes its lower bound value but excludes its upper bound value.
+    """
+
     def configure(self, m, gap, val, active):
         m.add_indicator(active, val >= self.lower)
         m.add_indicator(active, val <= self.upper - gap)
@@ -84,6 +131,10 @@ class OpenUpperInterval(FloatInterval):
 
 class LessThan(OpenUpperInterval):
     def __init__(self, upper):
+        """An interval containing all points strictly less than its upper bound.
+
+        :param upper: The interval's supremum.
+        """
         super().__init__(0, upper)
 
 
@@ -132,7 +183,7 @@ class Theory(object):
         if isinstance(query, Formula):
             query = SimpleSentence(query, 1)
 
-        self.m = mp.model.Model(cts_by_name=True)
+        self.m = Model(cts_by_name=True)
         self.m.float_precision = 16
         self.gap = self.m.continuous_var(lb=0, ub=1, name="gap")
 
