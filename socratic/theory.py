@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from numbers import Number
+from typing import Union
 
 from docplex.mp.dvar import Var
 from docplex.mp.model import Model
@@ -139,11 +140,22 @@ class LessThan(OpenUpperInterval):
 
 
 class Sentence(ABC):
+    """A base class to associate collections of formulae with sets of possible truth values.
+    """
     pass
 
 
 class SimpleSentence(Sentence):
-    def __init__(self, formula, intervals):
+    TruthType = Union[FloatInterval, Number]
+
+    def __init__(self, formula: Formula, intervals: Union[Iterable[TruthType], TruthType]):
+        """A sentence made up of one formula and a union of intervals of possible truth values.
+
+        :param formula: A logical expression.
+        :param intervals: A collection of intervals representing the formula's set of possible truth values.  Numbers
+            provided in lieu of FloatIntervals are coerced into Points.  In addition, one may provide an individual
+            FloatInterval or Number in lieu of an Iterable to effect a single-element union.
+        """
         if not isinstance(intervals, Iterable):
             intervals = [intervals]
 
@@ -151,9 +163,17 @@ class SimpleSentence(Sentence):
         self.intervals = [Point(r) if isinstance(r, Number) else r for r in intervals]
 
     def reset(self):
+        """Erase any previous configuration in preparation for reconfiguration.
+        """
         self.formula.reset()
 
-    def configure(self, m, gap, logic):
+    def configure(self, m: Model, gap: Var, logic: Logic):
+        """Add constraints to a model defining the formula to have truth value lying within any associated interval.
+
+        :param m: An MP model containing gap to which the formula and intervals will be added.
+        :param gap: The model's gap variable, used to enforce strict inequality.
+        :param logic: The t-norm used to define the sentence's connectives.
+        """
         self.formula.configure(m, gap, logic)
 
         active_interval = m.binary_var_list(len(self.intervals), name=repr(self.formula) + ".active_interval")
@@ -161,7 +181,13 @@ class SimpleSentence(Sentence):
         for i in range(len(self.intervals)):
             self.intervals[i].configure(m, gap, self.formula.val, active_interval[i])
 
-    def compliment(self, m, gap, logic):
+    def compliment(self, m: Model, gap: Var, logic: Logic):
+        """Add constraints to a model defining the formula to have truth value lying outside all associated intervals.
+
+        :param m: An MP model containing gap to which the formula and intervals will be added.
+        :param gap: The model's gap variable, used to enforce strict inequality.
+        :param logic: The t-norm used to define the sentence's connectives.
+        """
         self.formula.configure(m, gap, logic)
 
         active_interval = m.binary_var_list(len(self.intervals), name=repr(self.formula) + ".active_interval")
