@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from numbers import Number
+from numbers import Real
 from typing import Iterable, Optional, Union
 
 from docplex.mp.dvar import Var
@@ -8,8 +8,8 @@ from docplex.mp.model import Model
 from socratic.op import Logic, Formula
 
 
-class FloatInterval(ABC):
-    def __init__(self, lower: float, upper: float):
+class RealInterval(ABC):
+    def __init__(self, lower: Real, upper: Real):
         """A base class for closed and open intervals defined by their lower and upper bounds.
 
         :param lower: The interval's minimum or infimum value if open.
@@ -41,7 +41,7 @@ class FloatInterval(ABC):
         pass
 
 
-class ClosedInterval(FloatInterval):
+class ClosedInterval(RealInterval):
     """An interval that includes both its lower and upper bound values.
     """
 
@@ -55,7 +55,7 @@ class ClosedInterval(FloatInterval):
 
 
 class Point(ClosedInterval):
-    def __init__(self, point):
+    def __init__(self, point: Real):
         """A point interval with equal lower and upper bound.
 
         :param point: The singular value within the interval.
@@ -81,7 +81,7 @@ class AtMost(ClosedInterval):
         super().__init__(0, upper)
 
 
-class OpenInterval(FloatInterval):
+class OpenInterval(RealInterval):
     """An interval that excludes both its lower and upper bound values.
     """
 
@@ -94,7 +94,7 @@ class OpenInterval(FloatInterval):
         m.add_indicator(active, val >= self.upper, 0)
 
 
-class OpenLowerInterval(FloatInterval):
+class OpenLowerInterval(RealInterval):
     """An interval that excludes its lower bound value but includes its upper bound value.
     """
 
@@ -116,7 +116,7 @@ class GreaterThan(OpenLowerInterval):
         super().__init__(lower, 1)
 
 
-class OpenUpperInterval(FloatInterval):
+class OpenUpperInterval(RealInterval):
     """An interval that includes its lower bound value but excludes its upper bound value.
     """
 
@@ -145,7 +145,7 @@ class Sentence(ABC):
 
 
 class SimpleSentence(Sentence):
-    TruthType = Union[FloatInterval, Number]
+    TruthType = Union[RealInterval, Real]
 
     def __init__(self, formula: Formula, intervals: Union[Iterable[TruthType], TruthType]):
         """A sentence made up of one formula and a union of intervals of possible truth values.
@@ -154,15 +154,15 @@ class SimpleSentence(Sentence):
             SimpleSentence(Prop('a'), [0, GreaterThan(.5)])
 
         :param formula: A logical expression.
-        :param intervals: A collection of intervals representing the formula's set of possible truth values.  Numbers
-            provided in lieu of FloatIntervals are coerced into Points.  In addition, one may provide an individual
-            FloatInterval or Number in lieu of an Iterable to effect a single-element union.
+        :param intervals: A collection of intervals representing the formula's set of possible truth values.  Reals
+            provided in lieu of RealIntervals are coerced into Points.  In addition, one may provide an individual
+            RealInterval or Real in lieu of an Iterable to effect a single-element union.
         """
         if not isinstance(intervals, Iterable):
             intervals = [intervals]
 
         self.formula = formula
-        self.intervals = [Point(r) if isinstance(r, Number) else r for r in intervals]
+        self.intervals = [Point(r) if isinstance(r, Real) else r for r in intervals]
 
     def reset(self):
         """Erase any previous configuration in preparation for reconfiguration.

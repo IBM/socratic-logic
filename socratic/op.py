@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-from numbers import Number
+from numbers import Real
 
 
 class Logic(Enum):
@@ -69,7 +69,7 @@ class Const(Formula):
         self.val = val
 
     def __eq__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Real):
             return self.val == other
 
         return type(self) is type(other) and self.val == other.val
@@ -104,7 +104,7 @@ class Operator(Formula, ABC):
             if isinstance(arg, str):
                 return Prop(arg)
 
-            if isinstance(arg, Number):
+            if isinstance(arg, Real):
                 return Const(arg)
 
             return arg
@@ -245,7 +245,7 @@ class Implies(BinaryOperator):
                 m.add_indicator(lhs_le_rhs, self.val == self.rhs.val, 0)
 
         else:  # logic is Logic.LUKASIEWICZ
-            if isinstance(self.rhs.val, Number) and self.rhs.val == 0:
+            if isinstance(self.rhs.val, Real) and self.rhs.val == 0:
                 self._add_constraint(m, self.val == 1 - self.lhs.val)
             else:
                 self._add_constraint(m, self.val == m.min(1, 1 - self.lhs.val + self.rhs.val))
