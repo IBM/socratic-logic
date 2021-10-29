@@ -355,6 +355,12 @@ class Coef(UnaryOperator):
 
         self.coef = coef
 
+    def __eq__(self, other):
+        return super().__eq__(other) and self.coef == other.coef
+
+    def __hash__(self):
+        return super().__hash__()
+
     def __repr__(self, _depth=0):
         return self._annotate_recurrence(
             lambda d: f"{type(self).__name__}({repr(self.coef)}, {self.arg.__repr__(d)})",
@@ -377,6 +383,12 @@ class Exp(UnaryOperator):
         super().__init__(arg)
 
         self.exp = exp
+
+    def __eq__(self, other):
+        return super().__eq__(other) and self.exp == other.exp
+
+    def __hash__(self):
+        return super().__hash__()
 
     def __repr__(self, _depth=0):
         return self._annotate_recurrence(
