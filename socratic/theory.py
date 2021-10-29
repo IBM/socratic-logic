@@ -120,9 +120,6 @@ class SimpleSentence(Sentence):
 
 class Theory(object):
     def __init__(self, *args):
-        if len(args) == 1 and isinstance(args[0], Iterable):
-            args = args[0]
-
         self.sentences = [SimpleSentence(s, 1) if isinstance(s, Formula) else s for s in args]
 
         self.m = None

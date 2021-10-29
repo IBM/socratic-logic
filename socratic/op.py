@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
 from enum import Enum
 from numbers import Number
 
@@ -100,10 +99,6 @@ class Operator(Formula, ABC):
         super().__init__()
 
         self.logic = logic
-
-        if len(args) == 1 and isinstance(args[0], Iterable):
-            if not isinstance(args[0], str):
-                args = args[0]
 
         def init_operand(arg):
             if isinstance(arg, str):
