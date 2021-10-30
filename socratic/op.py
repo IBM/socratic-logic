@@ -177,10 +177,10 @@ class Operator(Formula, ABC):
     def _add_constraints(self, m: Model, gap: Var, logic: Logic):
         pass
 
-    def _add_constraint(self, m: Model, constraint: AbstractConstraint, name="constraint"):
+    def _add_constraint(self, m: Model, ct: Callable[[], AbstractConstraint], name="constraint"):
         ct_name = f"{repr(self)}.{name}"
         if m.get_constraint_by_name(ct_name) is None:
-            return m.add_constraint(constraint, ctname=ct_name)
+            return m.add_constraint(ct(), ctname=ct_name)
 
 
 class And(Operator):
@@ -189,10 +189,10 @@ class And(Operator):
 
     def _add_constraints(self, m, gap, logic):
         if logic is Logic.GODEL:
-            self._add_constraint(m, self.val == m.min(op.val for op in self.operands))
+            self._add_constraint(m, lambda: self.val == m.min(op.val for op in self.operands))
 
         else:  # logic is Logic.LUKASIEWICZ
-            self._add_constraint(m, self.val == m.max(0, 1 - m.sum(1 - op.val for op in self.operands)))
+            self._add_constraint(m, lambda: self.val == m.max(0, 1 - m.sum(1 - op.val for op in self.operands)))
 
 
 class WeakAnd(And):
@@ -212,10 +212,10 @@ class Or(Operator):
 
     def _add_constraints(self, m, gap, logic):
         if logic is Logic.GODEL:
-            self._add_constraint(m, self.val == m.max(op.val for op in self.operands))
+            self._add_constraint(m, lambda: self.val == m.max(op.val for op in self.operands))
 
         else:  # logic is Logic.LUKASIEWICZ
-            self._add_constraint(m, self.val == m.min(1, m.sum(op.val for op in self.operands)))
+            self._add_constraint(m, lambda: self.val == m.min(1, m.sum(op.val for op in self.operands)))
 
 
 class WeakOr(Or):
@@ -264,9 +264,9 @@ class Implies(BinaryOperator):
 
         else:  # logic is Logic.LUKASIEWICZ
             if isinstance(self.rhs.val, Real) and self.rhs.val == 0:
-                self._add_constraint(m, self.val == 1 - self.lhs.val)
+                self._add_constraint(m, lambda: self.val == 1 - self.lhs.val)
             else:
-                self._add_constraint(m, self.val == m.min(1, 1 - self.lhs.val + self.rhs.val))
+                self._add_constraint(m, lambda: self.val == m.min(1, 1 - self.lhs.val + self.rhs.val))
 
 
 class Equiv(BinaryOperator):
@@ -286,7 +286,7 @@ class Equiv(BinaryOperator):
                 m.add_indicator(lhs_eq_rhs, self.val == m.min(self.lhs.val, self.rhs.val), 0)
 
         else:  # logic is Logic.LUKASIEWICZ
-            self._add_constraint(m, self.val == 1 - m.abs(self.lhs.val - self.rhs.val))
+            self._add_constraint(m, lambda: self.val == 1 - m.abs(self.lhs.val - self.rhs.val))
 
 
 class UnaryOperator(Operator, ABC):
@@ -390,7 +390,7 @@ class Coef(UnaryOperator):
             _depth)
 
     def _add_constraints(self, m, gap, logic):
-        self._add_constraint(m, self.val == m.min(1, self.coef * self.arg.val))
+        self._add_constraint(m, lambda: self.val == m.min(1, self.coef * self.arg.val))
 
 
 class Exp(UnaryOperator):
@@ -420,4 +420,4 @@ class Exp(UnaryOperator):
         return self._annotate_recurrence(fn, _depth)
 
     def _add_constraints(self, m, gap, logic):
-        self._add_constraint(m, self.val == m.max(0, 1 - self.exp * (1 - self.arg.val)))
+        self._add_constraint(m, lambda: self.val == m.max(0, 1 - self.exp * (1 - self.arg.val)))
