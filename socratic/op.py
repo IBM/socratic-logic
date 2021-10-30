@@ -1,6 +1,11 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 from numbers import Real
+from typing import Callable, Optional, Union
+
+from docplex.mp.constr import AbstractConstraint
+from docplex.mp.dvar import Var
+from docplex.mp.model import Model
 
 
 class Logic(Enum):
@@ -9,19 +14,29 @@ class Logic(Enum):
 
 
 class Formula(ABC):
+    val: Union[Var, Real, None]
+
     def __init__(self):
         self.val = float("nan")
 
-    def __rmul__(self, other):
+    def __rmul__(self, other: Real):
         return Coef(other, self)
 
     __mul__ = __rmul__
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: Real):
         return Coef(1 / other, self)
 
-    def __pow__(self, other):
+    def __pow__(self, other: Real):
         return Exp(other, self)
+
+    @abstractmethod
+    def __repr__(self, _depth=0):
+        pass
+
+    @abstractmethod
+    def __str__(self, _depth=0):
+        pass
 
     def reset(self):
         if self.val is not None:
@@ -29,7 +44,7 @@ class Formula(ABC):
 
             return True
 
-    def configure(self, m, gap, logic):
+    def configure(self, m: Model, gap: Var, logic: Logic):
         if self.val is None:
             var_name = repr(self) + ".val"
             self.val = m.get_var_by_name(var_name)
@@ -41,7 +56,7 @@ class Formula(ABC):
 
 
 class Prop(Formula):
-    def __init__(self, name):
+    def __init__(self, name: str):
         super().__init__()
 
         self.name = name
@@ -63,7 +78,7 @@ class Prop(Formula):
 
 
 class Const(Formula):
-    def __init__(self, val):
+    def __init__(self, val: Real):
         super().__init__()
 
         self.val = val
@@ -90,17 +105,20 @@ class Const(Formula):
         pass
 
 
+SubformulaType = Union[Formula, str, Real]
+
+
 class Operator(Formula, ABC):
     @property
     @abstractmethod
-    def symb(self): pass
+    def symb(self) -> str: pass
 
-    def __init__(self, *args, logic=None):
+    def __init__(self, *args: SubformulaType, logic: Optional[Logic] = None):
         super().__init__()
 
         self.logic = logic
 
-        def init_operand(arg):
+        def init_operand(arg: SubformulaType) -> Formula:
             if isinstance(arg, str):
                 return Prop(arg)
 
@@ -132,7 +150,7 @@ class Operator(Formula, ABC):
             return fmt % f" {self.symb} ".join(op.__str__(d) for op in self.operands)
         return self._annotate_recurrence(fn, _depth)
 
-    def _annotate_recurrence(self, fn, depth):
+    def _annotate_recurrence(self, fn: Callable[[int], str], depth: int):
         if hasattr(self, "_depth"):
             return '.' * (depth - self._depth + 1)
         self._depth = depth
@@ -156,10 +174,10 @@ class Operator(Formula, ABC):
             self._add_constraints(m, gap, logic)
 
     @abstractmethod
-    def _add_constraints(self, m, gap, logic):
+    def _add_constraints(self, m: Model, gap: Var, logic: Logic):
         pass
 
-    def _add_constraint(self, m, constraint, name="constraint"):
+    def _add_constraint(self, m: Model, constraint: AbstractConstraint, name="constraint"):
         ct_name = f"{repr(self)}.{name}"
         if m.get_constraint_by_name(ct_name) is None:
             return m.add_constraint(constraint, ctname=ct_name)
@@ -212,20 +230,20 @@ class WeakOr(Or):
 
 
 class BinaryOperator(Operator, ABC):
-    def __init__(self, lhs, rhs, logic=None):
+    def __init__(self, lhs: SubformulaType, rhs: SubformulaType, logic=None):
         super().__init__(lhs, rhs, logic=logic)
 
     @property
     def lhs(self): return self.operands[0]
 
     @lhs.setter
-    def lhs(self, value): self.operands[0] = value
+    def lhs(self, value: Formula): self.operands[0] = value
 
     @property
     def rhs(self): return self.operands[1]
 
     @rhs.setter
-    def rhs(self, value): self.operands[1] = value
+    def rhs(self, value: Formula): self.operands[1] = value
 
 
 class Implies(BinaryOperator):
@@ -272,14 +290,14 @@ class Equiv(BinaryOperator):
 
 
 class UnaryOperator(Operator, ABC):
-    def __init__(self, arg, logic=None):
+    def __init__(self, arg: SubformulaType, logic=None):
         super().__init__(arg, logic=logic)
 
     @property
     def arg(self): return self.operands[0]
 
     @arg.setter
-    def arg(self, value): self.operands[0] = value
+    def arg(self, value: Formula): self.operands[0] = value
 
     def __str__(self, _depth=0):
         return self._annotate_recurrence(
@@ -350,7 +368,7 @@ class Coef(UnaryOperator):
     @property
     def symb(self): return '⋅'
 
-    def __init__(self, coef, arg):
+    def __init__(self, coef: Real, arg):
         super().__init__(arg)
 
         self.coef = coef
@@ -379,7 +397,7 @@ class Exp(UnaryOperator):
     @property
     def symb(self): return '^'
 
-    def __init__(self, exp, arg):
+    def __init__(self, exp: Real, arg):
         super().__init__(arg)
 
         self.exp = exp
