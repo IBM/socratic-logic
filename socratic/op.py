@@ -30,6 +30,9 @@ class Formula(ABC):
     def __pow__(self, other: Real):
         return Exp(other, self)
 
+    def __eq__(self, other):
+        return type(self) == type(other) and repr(self) == repr(other)
+
     @abstractmethod
     def __repr__(self, _depth=0):
         pass
@@ -61,15 +64,6 @@ class Prop(Formula):
 
         self.name = name
 
-    def __eq__(self, other):
-        if isinstance(other, str):
-            return self.name == other
-
-        return type(self) is type(other) and self.name == other.name
-
-    def __hash__(self):
-        return super().__hash__()
-
     def __repr__(self, _depth=0):
         return f"{type(self).__name__}({repr(self.name)})"
 
@@ -82,15 +76,6 @@ class Const(Formula):
         super().__init__()
 
         self.val = val
-
-    def __eq__(self, other):
-        if isinstance(other, Real):
-            return self.val == other
-
-        return type(self) is type(other) and self.val == other.val
-
-    def __hash__(self):
-        return super().__hash__()
 
     def __repr__(self, _depth=0):
         return f"{type(self).__name__}({repr(self.val)})"
@@ -128,14 +113,6 @@ class Operator(Formula, ABC):
             return arg
 
         self.operands = [init_operand(arg) for arg in args]
-
-    def __eq__(self, other):
-        return (type(self) is type(other) and
-                self.logic is other.logic and
-                self.operands == other.operands)
-
-    def __hash__(self):
-        return super().__hash__()
 
     def __repr__(self, _depth=0):
         def fn(d):
@@ -373,12 +350,6 @@ class Coef(UnaryOperator):
 
         self.coef = coef
 
-    def __eq__(self, other):
-        return super().__eq__(other) and self.coef == other.coef
-
-    def __hash__(self):
-        return super().__hash__()
-
     def __repr__(self, _depth=0):
         return self._annotate_recurrence(
             lambda d: f"{type(self).__name__}({repr(self.coef)}, {self.arg.__repr__(d)})",
@@ -401,12 +372,6 @@ class Exp(UnaryOperator):
         super().__init__(arg)
 
         self.exp = exp
-
-    def __eq__(self, other):
-        return super().__eq__(other) and self.exp == other.exp
-
-    def __hash__(self):
-        return super().__hash__()
 
     def __repr__(self, _depth=0):
         return self._annotate_recurrence(
