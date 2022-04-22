@@ -18,6 +18,11 @@ class RealInterval(ABC):
         self.lower = lower
         self.upper = upper
 
+    def __repr__(self):
+        """Return a string expressing code to reproduce the interval.
+        """
+        return f"{type(self).__name__}({repr(self.lower)}, {repr(self.upper)})"
+
     @abstractmethod
     def configure(self, m: Model, gap: Var, val: Var, active: Var):
         """Add constraints to a model requiring a value to lie within the represented interval (if active).
@@ -67,6 +72,9 @@ class Point(ClosedInterval):
         """
         super().__init__(point, point)
 
+    def __repr__(self):
+        return f"{type(self).__name__}({repr(self.lower)})"
+
 
 class AtLeast(ClosedInterval):
     def __init__(self, lower):
@@ -76,6 +84,9 @@ class AtLeast(ClosedInterval):
         """
         super().__init__(lower, 1)
 
+    def __repr__(self):
+        return f"{type(self).__name__}({repr(self.lower)})"
+
 
 class AtMost(ClosedInterval):
     def __init__(self, upper):
@@ -84,6 +95,9 @@ class AtMost(ClosedInterval):
         :param upper: The interval's max value.
         """
         super().__init__(0, upper)
+
+    def __repr__(self):
+        return f"{type(self).__name__}({repr(self.upper)})"
 
 
 class OpenInterval(RealInterval):
@@ -130,6 +144,9 @@ class GreaterThan(OpenLowerInterval):
         """
         super().__init__(lower, 1)
 
+    def __repr__(self):
+        return f"{type(self).__name__}({repr(self.lower)})"
+
 
 class OpenUpperInterval(RealInterval):
     def __init__(self, upper, lower):
@@ -157,6 +174,9 @@ class LessThan(OpenUpperInterval):
         """
         super().__init__(0, upper)
 
+    def __repr__(self):
+        return f"{type(self).__name__}({repr(self.upper)})"
+
 
 class Sentence(ABC):
     """A base class to associate collections of formulae with sets of possible truth values.
@@ -183,6 +203,11 @@ class SimpleSentence(Sentence):
 
         self.formula = formula
         self.intervals = [Point(r) if isinstance(r, Real) else r for r in intervals]
+
+    def __repr__(self):
+        """Return a code-like string expressing the content of a sentence.
+        """
+        return f"{type(self).__name__}({repr(self.formula)}, {repr(self.intervals)})"
 
     def reset(self):
         """Erase any previous configuration in preparation for reconfiguration.
@@ -228,6 +253,11 @@ class Theory(object):
 
         self.m = None
         self.gap = None
+
+    def __repr__(self):
+        """Return a code-like string expressing the content of a theory.
+        """
+        return "%s(%s)" % (type(self).__name__, ", ".join(repr(s) for s in self.sentences))
 
     def satisfiable(self, logic=Logic.LUKASIEWICZ):
         """Test whether a theory's sentences may all be true simultaneously.
