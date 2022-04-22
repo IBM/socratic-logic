@@ -214,8 +214,8 @@ class Operator(Formula, ABC):
 
     def __str__(self, _depth=0):
         def fn(d):
-            fmt = f"({self.symb}%s)" if len(self.operands) <= 1 else "(%s)"
-            return fmt % f" {self.symb} ".join(op.__str__(d) for op in self.operands)
+            arg_str = f" {self.symb} ".join(op.__str__(d) for op in self.operands)
+            return "(%s%s)" % (self.symb if len(self.operands) <= 1 else "", arg_str)
 
         return self._annotate_recurrence(fn, _depth)
 
