@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from numbers import Real
-from typing import Iterable, Optional, Union
+from typing import Iterable, List, Optional, Union
 
 from docplex.mp.dvar import Var
 from docplex.mp.model import Model
@@ -184,8 +184,11 @@ class Sentence(ABC):
     pass
 
 
+TruthType = Union[RealInterval, Real]
+
+
 class SimpleSentence(Sentence):
-    TruthType = Union[RealInterval, Real]
+    intervals: List[RealInterval]
 
     def __init__(self, formula: Formula, intervals: Union[Iterable[TruthType], TruthType]):
         """A sentence made up of one formula and a union of intervals of possible truth values.
@@ -244,6 +247,8 @@ class SimpleSentence(Sentence):
 
 
 class Theory(object):
+    sentences: List[SimpleSentence]
+
     def __init__(self, *args: Union[SimpleSentence, Formula]):
         """A collection of sentences for testing mutual satisfiability and/or entailment.
 
