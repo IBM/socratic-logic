@@ -42,8 +42,13 @@ class RealInterval(ABC):
 
 
 class ClosedInterval(RealInterval):
-    """An interval that includes both its lower and upper bound values.
-    """
+    def __init__(self, lower, upper):
+        """An interval that includes both its lower and upper bound values.
+
+        :param lower: The interval's minimum value.
+        :param upper: The interval's maximum value.
+        """
+        super().__init__(lower, upper)
 
     def configure(self, m, gap, val, active):
         m.add_indicator(active, val >= self.lower)
@@ -82,8 +87,13 @@ class AtMost(ClosedInterval):
 
 
 class OpenInterval(RealInterval):
-    """An interval that excludes both its lower and upper bound values.
-    """
+    def __init__(self, upper, lower):
+        """An interval that excludes both its lower and upper bound values.
+
+        :param lower: The interval's infimum value.
+        :param upper: The interval's supremum value.
+        """
+        super().__init__(upper, lower)
 
     def configure(self, m, gap, val, active):
         m.add_indicator(active, val >= self.lower + gap)
@@ -95,8 +105,13 @@ class OpenInterval(RealInterval):
 
 
 class OpenLowerInterval(RealInterval):
-    """An interval that excludes its lower bound value but includes its upper bound value.
-    """
+    def __init__(self, upper, lower):
+        """An interval that excludes its lower bound value but includes its upper bound value.
+
+        :param lower: The interval's infimum value.
+        :param upper: The interval's maximum value.
+        """
+        super().__init__(upper, lower)
 
     def configure(self, m, gap, val, active):
         m.add_indicator(active, val >= self.lower + gap)
@@ -117,8 +132,13 @@ class GreaterThan(OpenLowerInterval):
 
 
 class OpenUpperInterval(RealInterval):
-    """An interval that includes its lower bound value but excludes its upper bound value.
-    """
+    def __init__(self, upper, lower):
+        """An interval that includes its lower bound value but excludes its upper bound value.
+
+        :param lower: The interval's minimum value.
+        :param upper: The interval's supremum value.
+        """
+        super().__init__(upper, lower)
 
     def configure(self, m, gap, val, active):
         m.add_indicator(active, val >= self.lower)
